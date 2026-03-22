@@ -1,331 +1,132 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-
+<html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barros Connect - Pro Mobile</title>
+    <title>Barros Connect - Estável</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-
-        /* Reset total para celular */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #000;
-            color: #fff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* Área de Vídeo fixa no topo */
-        #video-container {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            background: #111;
-            border-bottom: 1px solid #222;
-            flex-shrink: 0;
-        }
-
-        #remote-video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        #local-video {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 60px;
-            height: 85px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 2px solid #3b82f6;
-            z-index: 10;
-            transform: scaleX(-1);
-        }
-
-        /* Chat ocupando o resto da tela */
-        #chat-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #0a0a0a;
-            overflow: hidden;
-            position: relative;
-        }
-
-        #chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            padding-bottom: 80px;
-        }
-
-        /* Modal "Pop-up" centralizado */
-        #conn-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            items-center;
-            justify-content: center;
-            z-index: 100;
-            padding: 20px;
-        }
-
-        .modal-box {
-            background: #18181b;
-            padding: 30px;
-            border-radius: 30px;
-            border: 1px solid #333;
-            width: 100%;
-            max-width: 320px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Barra de entrada fixa */
-        .input-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 12px;
-            background: #111;
-            border-top: 1px solid #222;
-            display: flex;
-            items-center;
-            gap: 10px;
-        }
-
-        .drawer {
-            position: absolute;
-            bottom: 70px;
-            left: 10px;
-            right: 10px;
-            background: #1c1c1f;
-            border: 1px solid #333;
-            border-radius: 20px;
-            padding: 15px;
-            z-index: 50;
-            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Animação Winks */
-        #wink-layer {
-            position: fixed;
-            inset: 0;
-            z-index: 200;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-        }
+        body { font-family: 'Roboto', sans-serif; background: #000; color: #fff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        #video-container { position: relative; width: 100%; height: 45vh; background: #111; border-bottom: 2px solid #333; }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        #local-video { position: absolute; bottom: 10px; right: 10px; width: 90px; height: 130px; border-radius: 12px; border: 2px solid #3b82f6; object-fit: cover; transform: scaleX(-1); z-index: 50; }
+        #chat { flex: 1; background: #0a0a0a; display: flex; flex-direction: column; }
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .m { padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 14px; }
+        .m-me { align-self: flex-end; background: #005c4b; }
+        .m-fr { align-self: flex-start; background: #202c33; }
+        #input-area { padding: 10px; background: #1a1a1a; display: flex; gap: 8px; align-items: center; }
+        input { flex: 1; background: #2a2a2a; border-radius: 20px; padding: 10px 15px; border: none; color: #fff; outline: none; }
     </style>
 </head>
-
 <body>
-
-    <div id="wink-layer"><img id="wink-img" src="" class="w-3/4 animate-pulse"></div>
 
     <div id="video-container">
         <video id="remote-video" autoplay playsinline></video>
         <video id="local-video" autoplay muted playsinline></video>
+    </div>
 
-        <div id="video-share-container" class="hidden absolute inset-0 bg-black z-20">
-            <iframe id="shared-iframe" class="w-full h-full" allow="autoplay"></iframe>
-            <button onclick="closeVideo()"
-                class="absolute top-2 right-2 bg-red-600 px-3 py-1 rounded-full text-[10px] font-bold">FECHAR</button>
+    <div id="chat">
+        <div id="messages"></div>
+        <div id="input-area">
+            <input id="txt" type="text" placeholder="Mensagem...">
+            <button onclick="send()" class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center font-bold">➤</button>
         </div>
     </div>
 
-    <div id="chat-section">
-        <div class="p-3 border-b border-zinc-900 flex justify-between items-center bg-zinc-900/50">
-            <select id="lang-select" class="bg-transparent text-[11px] font-bold text-blue-400 outline-none">
-                <option value="pt">PORTUGUÊS</option>
-                <option value="en">INGLÊS</option>
-                <option value="es">ESPANHOL</option>
-                <option value="zh-CN">CHINÊS</option>
-                <option value="ru">RUSSO</option>
-                <option value="ja">JAPONÊS</option>
-            </select>
-            <span class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">Barros Connect</span>
-        </div>
-
-        <div id="chat-messages" class="space-y-4">
-            <div class="text-center opacity-20 my-10 text-[10px] uppercase font-bold tracking-widest">Chat seguro e
-                traduzido</div>
-        </div>
-
-        <div id="extra-panel" class="drawer hidden">
-            <div class="grid grid-cols-3 gap-2 mb-4">
-                <button onclick="sendWink('kiss')" class="bg-zinc-800 py-2 rounded-lg text-[10px] font-bold">💋
-                    BEIJO</button>
-                <button onclick="sendWink('knock')" class="bg-zinc-800 py-2 rounded-lg text-[10px] font-bold">✊
-                    TOC-TOC</button>
-                <button onclick="sendWink('butt')" class="bg-zinc-800 py-2 rounded-lg text-[10px] font-bold">🍑
-                    BUNDA</button>
-            </div>
-            <div id="emoji-list" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto justify-center"></div>
-        </div>
-
-        <div id="media-input-box" class="drawer hidden">
-            <input id="media-url" type="text" placeholder="Link YouTube/MP3"
-                class="w-full bg-black p-3 rounded-xl text-xs outline-none border border-zinc-800 mb-3 text-white">
-            <div class="flex gap-2">
-                <button onclick="sendMedia('video')"
-                    class="flex-1 bg-blue-600 py-3 rounded-xl text-[10px] font-bold uppercase">Tocar Vídeo</button>
-                <button onclick="sendMedia('audio')"
-                    class="flex-1 bg-purple-600 py-3 rounded-xl text-[10px] font-bold uppercase">Música</button>
-            </div>
-        </div>
-
-        <div class="input-bar">
-            <button onclick="toggleExtra()" class="text-2xl">😊</button>
-            <button onclick="toggleMediaInput()" class="text-2xl">🔗</button>
-            <input id="msg-input" type="text" class="flex-1 bg-zinc-900 p-3 rounded-2xl outline-none text-sm"
-                placeholder="Escreva...">
-            <button onclick="sendMsg()"
-                class="bg-blue-600 w-11 h-11 rounded-full flex items-center justify-center text-lg">➤</button>
-        </div>
-    </div>
-
-    <div id="conn-modal">
-        <div class="modal-box">
-            <h2 class="text-blue-500 font-black italic text-xl mb-1">BARROS CONNECT</h2>
-            <p class="text-[9px] text-zinc-500 uppercase mb-6 tracking-widest">Aguarde o ID carregar</p>
-
-            <div id="peer-id" onclick="copyID()"
-                class="bg-black p-4 rounded-2xl mb-4 text-blue-400 font-mono text-[11px] cursor-pointer border border-zinc-800 break-all leading-tight">
-                GERANDO ID...</div>
-
-            <input id="target-id" type="text"
-                class="w-full bg-black p-4 rounded-2xl mb-4 text-center border border-zinc-700 text-sm outline-none"
-                placeholder="ID DO AMIGO">
-
-            <button onclick="startConnection()"
-                class="w-full bg-blue-600 p-4 rounded-2xl font-bold text-xs uppercase shadow-lg shadow-blue-900/30 active:scale-95 transition-transform">ENTRAR
-                NO CHAT</button>
+    <div id="setup" class="fixed inset-0 bg-black z-[1000] flex flex-col items-center justify-center p-6 text-center">
+        <h1 class="text-blue-500 font-black text-2xl mb-8">BARROS CONNECT V4</h1>
+        <div class="bg-zinc-900 p-6 rounded-[35px] w-full max-w-sm border border-zinc-800">
+            <p class="text-[10px] text-zinc-500 mb-2 uppercase tracking-widest">O Teu ID:</p>
+            <div id="my-id" class="bg-black p-4 rounded-xl mb-6 text-blue-400 font-mono text-xs break-all border border-zinc-700 cursor-pointer">A carregar...</div>
+            <input id="friend-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-zinc-700 outline-none text-center" placeholder="COLAR ID DO PARCEIRO">
+            <button onclick="startCall()" class="w-full bg-blue-600 p-4 rounded-xl font-bold uppercase tracking-widest">Ligar Agora</button>
+            <p id="status" class="mt-4 text-[10px] text-yellow-500 font-bold uppercase"></p>
         </div>
     </div>
 
     <script>
         const peer = new Peer();
         let conn, localStream;
-        const SOUNDS = { kiss: "https://www.myinstants.com/media/sounds/kiss-sound-effect.mp3", knock: "https://www.myinstants.com/media/sounds/knock-knock.mp3", butt: "https://www.myinstants.com/media/sounds/cartoon-boing.mp3" };
-        const GIFS = { kiss: "https://media.giphy.com/media/3o7TKLv3fDYLxH8hW0/giphy.gif", knock: "https://media.giphy.com/media/3o7TKVUn7XYM6mfuCs/giphy.gif", butt: "https://media.giphy.com/media/l41lTfOR5X9m7Wv8k/giphy.gif" };
-        const emojis = ["😀", "😂", "😍", "😘", "😎", "🤩", "🤔", "😢", "😭", "😡", "😱", "😴", "👍", "❤️", "🔥", "✨", "🚀", "💯"];
+        const status = document.getElementById('status');
 
-        function renderEmojis() {
-            const list = document.getElementById('emoji-list');
-            emojis.forEach(e => { list.innerHTML += `<span class="text-2xl p-1" onclick="addEmoji('${e}')">${e}</span>`; });
+        // 1. ACESSO À CÂMARA
+        async function initCamera() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+                document.getElementById('local-video').srcObject = localStream;
+                status.innerText = "Câmara pronta!";
+            } catch (e) {
+                status.innerText = "Erro: Ativa a câmara nas definições!";
+                console.error(e);
+            }
         }
-        function addEmoji(e) { document.getElementById('msg-input').value += e; }
-        renderEmojis();
+        initCamera();
 
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(s => {
-            localStream = s;
-            document.getElementById('local-video').srcObject = s;
-        }).catch(err => console.log("Câmera desligada"));
+        // 2. RECEBER ID
+        peer.on('open', id => {
+            document.getElementById('my-id').innerText = id;
+            document.getElementById('my-id').onclick = () => {
+                navigator.clipboard.writeText(id);
+                alert("ID Copiado!");
+            };
+        });
 
-        peer.on('open', id => document.getElementById('peer-id').innerText = id);
-        peer.on('connection', c => { conn = c; setupConn(); document.getElementById('conn-modal').style.display = 'none'; });
-        peer.on('call', call => { call.answer(localStream); call.on('stream', s => document.getElementById('remote-video').srcObject = s); });
+        // 3. RECEBER CHAMADA (Telemóvel recebe do PC ou vice-versa)
+        peer.on('call', call => {
+            status.innerText = "A receber chamada...";
+            call.answer(localStream);
+            call.on('stream', s => {
+                document.getElementById('remote-video').srcObject = s;
+                document.getElementById('setup').style.display = 'none';
+            });
+        });
 
-        function startConnection() {
-            const id = document.getElementById('target-id').value;
-            if (!id) { document.getElementById('conn-modal').style.display = 'none'; return; }
-            conn = peer.connect(id);
-            setupConn();
-            peer.call(id, localStream).on('stream', s => document.getElementById('remote-video').srcObject = s);
-            document.getElementById('conn-modal').style.display = 'none';
+        peer.on('connection', c => {
+            conn = c;
+            setupChat();
+            document.getElementById('setup').style.display = 'none';
+        });
+
+        // 4. INICIAR CHAMADA
+        function startCall() {
+            const fid = document.getElementById('friend-id').value;
+            if(!fid) return alert("Copia o ID da outra pessoa!");
+
+            status.innerText = "A ligar...";
+            
+            // Ligar Vídeo
+            const call = peer.call(fid, localStream);
+            call.on('stream', s => {
+                document.getElementById('remote-video').srcObject = s;
+                document.getElementById('setup').style.display = 'none';
+            });
+
+            // Ligar Chat
+            conn = peer.connect(fid);
+            setupChat();
         }
 
-        function setupConn() {
+        function setupChat() {
             conn.on('data', data => {
-                if (data.type === 'wink') receiveWink(data.kind);
-                else if (data.type === 'video') playSharedVideo(data.url);
-                else addMessage(data.text, data.trans, 'Amigo');
+                if(data.type === 'text') addMsg(data.val, 'fr');
             });
         }
 
-        function toggleMediaInput() { document.getElementById('media-input-box').classList.toggle('hidden'); document.getElementById('extra-panel').classList.add('hidden'); }
-        function toggleExtra() { document.getElementById('extra-panel').classList.toggle('hidden'); document.getElementById('media-input-box').classList.add('hidden'); }
-
-        function sendMedia(type) {
-            const url = document.getElementById('media-url').value;
-            if (!url) return;
-            if (conn) conn.send({ type: type, url: url });
-            if (type === 'video') playSharedVideo(url);
-            toggleMediaInput();
+        function send() {
+            const val = document.getElementById('txt').value;
+            if(!val || !conn) return;
+            conn.send({type: 'text', val: val});
+            addMsg(val, 'me');
+            document.getElementById('txt').value = '';
         }
 
-        function playSharedVideo(url) {
-            const container = document.getElementById('video-share-container');
-            const iframe = document.getElementById('shared-iframe');
-            container.classList.remove('hidden');
-            if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                const vid = url.split('v=')[1] || url.split('/').pop().split('?')[0];
-                iframe.src = `https://www.youtube.com/embed/${vid}?autoplay=1`;
-            } else { iframe.src = url; }
-        }
-
-        function closeVideo() { document.getElementById('video-share-container').classList.add('hidden'); document.getElementById('shared-iframe').src = ""; }
-
-        function sendWink(kind) { if (conn) conn.send({ type: 'wink', kind: kind }); receiveWink(kind); toggleExtra(); }
-        function receiveWink(kind) {
-            new Audio(SOUNDS[kind]).play();
-            const img = document.getElementById('wink-img');
-            img.src = GIFS[kind];
-            document.getElementById('wink-layer').style.display = 'flex';
-            setTimeout(() => { document.getElementById('wink-layer').style.display = 'none'; }, 3000);
-        }
-
-        async function sendMsg() {
-            const input = document.getElementById('msg-input');
-            const lang = document.getElementById('lang-select').value;
-            if (!input.value) return;
-            try {
-                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(input.value)}&langpair=pt|${lang}`);
-                const json = await res.json();
-                const trans = json.responseData.translatedText;
-                if (conn) conn.send({ text: input.value, trans: trans });
-                addMessage(input.value, trans, 'Você');
-            } catch { addMessage(input.value, input.value, 'Você'); }
-            input.value = '';
-        }
-
-        function addMessage(orig, trans, sender) {
-            const box = document.getElementById('chat-messages');
-            const isMe = sender === 'Você';
-            box.innerHTML += `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                <div class="${isMe ? 'bg-blue-600' : 'bg-zinc-800'} p-3 rounded-2xl max-w-[85%] shadow-md border border-white/5">
-                    <p class="text-[7px] opacity-40 uppercase mb-1 font-black">${orig}</p>
-                    <p class="text-sm font-medium leading-tight">${trans}</p>
-                </div>
-            </div>`;
+        function addMsg(t, s) {
+            const box = document.getElementById('messages');
+            box.innerHTML += `<div class="m ${s === 'me' ? 'm-me' : 'm-fr'}">${t}</div>`;
             box.scrollTop = box.scrollHeight;
-        }
-
-        function copyID() {
-            const id = document.getElementById('peer-id').innerText;
-            navigator.clipboard.writeText(id);
-            alert("ID Copiado!");
         }
     </script>
 </body>
-
 </html>
