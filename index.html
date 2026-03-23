@@ -3,30 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barros Connect - Comunicação Total</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Barros Connect - Estabilidade</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100vh; background: #000; font-family: sans-serif; overflow: hidden; }
+        body, html { height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
 
-        /* VÍDEO FUNDO */
-        #remote-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; background: #111; }
+        /* VÍDEO DA AMIGA (FUNDO) */
+        #remote-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 5; background: #000; }
         
-        /* SEU VÍDEO */
-        #local-video { position: fixed; top: 20px; right: 20px; width: 85px; height: 120px; border-radius: 12px; object-fit: cover; border: 2px solid #3b82f6; z-index: 100; transform: scaleX(-1); }
+        /* SEU VÍDEO (PEQUENO) */
+        #local-video { position: fixed; top: 20px; right: 20px; width: 80px; height: 110px; border-radius: 12px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3); z-index: 100; transform: scaleX(-1); }
 
         /* INTERFACE */
-        #ui { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; pointer-events: none; }
+        #ui { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; }
+        #messages { padding: 20px; display: flex; flex-direction: column; gap: 8px; max-height: 50%; overflow-y: auto; pointer-events: auto; }
         
-        #messages { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; pointer-events: auto; justify-content: flex-end; }
-        
-        .bubble { background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 20px; color: white; max-width: 80%; align-self: flex-start; pointer-events: auto; }
-        .bubble-me { align-self: flex-end; background: rgba(30, 64, 175, 0.8); }
+        .bubble { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(5px); padding: 8px 12px; border-radius: 15px; color: white; font-size: 14px; max-width: 80%; align-self: flex-start; border: 1px solid rgba(255,255,255,0.1); }
+        .bubble-me { align-self: flex-end; background: rgba(30, 64, 175, 0.6); }
 
         /* BARRA DE BAIXO */
-        #bar { padding: 15px; display: flex; gap: 10px; align-items: center; background: linear-gradient(transparent, rgba(0,0,0,0.9)); pointer-events: auto; }
-        #msg-in { flex: 1; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); border-radius: 30px; padding: 12px 20px; color: white; outline: none; font-size: 16px; }
+        #input-bar { padding: 15px; display: flex; gap: 10px; align-items: center; background: linear-gradient(transparent, rgba(0,0,0,0.8)); pointer-events: auto; }
+        #msg-in { flex: 1; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 25px; padding: 12px 20px; color: white; border: none; outline: none; font-size: 16px; }
 
         #login { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; items-center; justify-content: center; p: 20px; pointer-events: auto; }
     </style>
@@ -37,48 +36,42 @@
     <video id="local-video" autoplay muted playsinline></video>
 
     <div id="ui">
-        <div class="p-4 pointer-events-auto">
-            <select id="lang" class="bg-black/60 text-white text-[11px] p-2 rounded-full border border-white/20">
-                <option value="en" selected>INGLÊS</option>
-                <option value="es">ESPANHOL</option>
-                <option value="ru">RUSSO</option>
-                <option value="pt">PORTUGUÊS</option>
-            </select>
-        </div>
-
         <div id="messages"></div>
-
-        <div id="bar">
-            <input id="msg-in" type="text" placeholder="Escreva aqui...">
-            <button onclick="send()" class="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center text-white shadow-xl font-bold">➤</button>
+        <div id="input-bar">
+            <select id="lang" class="bg-black/40 text-white text-[10px] p-2 rounded-lg outline-none mr-2">
+                <option value="en">EN</option><option value="es">ES</option><option value="pt">PT</option>
+            </select>
+            <input id="msg-in" type="text" placeholder="Diga algo...">
+            <button onclick="send()" class="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold">➤</button>
         </div>
     </div>
 
     <div id="login">
-        <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-zinc-800 text-center shadow-2xl">
-            <h2 class="text-blue-500 font-black italic text-xl mb-6">BARROS CONNECT</h2>
-            <div id="my-id-ui" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-zinc-800 break-all cursor-pointer" onclick="copy()">GERANDO ID...</div>
-            <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-zinc-800 text-white text-center outline-none" placeholder="ID DO AMIGO">
-            <button onclick="start()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase shadow-lg shadow-blue-900/40">CONECTAR AGORA</button>
+        <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-zinc-800 text-center">
+            <h1 class="text-blue-500 font-bold text-xl mb-6">BARROS CONNECT</h1>
+            <div id="my-id-ui" class="bg-black p-4 rounded-xl mb-6 text-blue-400 font-mono text-xs break-all border border-zinc-700" onclick="copy()">GERANDO ID...</div>
+            <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-6 border border-zinc-800 text-white text-center outline-none" placeholder="ID DO AMIGO">
+            <button onclick="start()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR</button>
         </div>
     </div>
 
     <script>
-        // SERVIDORES DO GOOGLE PARA GARANTIR CONEXÃO NO 4G
-        const peer = new Peer({
-            config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }, { 'urls': 'stun:stun1.l.google.com:19302' }]}
-        });
-
+        const peer = new Peer({ config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}});
         let conn, localStream;
 
-        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
-            localStream = s;
-            document.getElementById('local-video').srcObject = s;
-        });
-
+        // 1. Gera o ID primeiro de tudo
         peer.on('open', id => document.getElementById('my-id-ui').innerText = id);
 
-        // RECEBER LIGAÇÃO
+        // 2. Tenta pegar a câmera
+        async function getCam() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+                document.getElementById('local-video').srcObject = localStream;
+            } catch (e) { console.log("Câmera bloqueada"); }
+        }
+        getCam();
+
+        // 3. Receber chamada
         peer.on('call', call => {
             call.answer(localStream);
             call.on('stream', s => {
@@ -89,7 +82,7 @@
             });
         });
 
-        // RECEBER MENSAGEM
+        // 4. Receber chat
         peer.on('connection', c => {
             conn = c;
             conn.on('data', d => addBubble(d.orig, d.trans, false));
@@ -99,8 +92,7 @@
         function start() {
             const tid = document.getElementById('target-id').value;
             if(!tid) return;
-
-            // Ligar Vídeo
+            
             const call = peer.call(tid, localStream);
             call.on('stream', s => {
                 const rv = document.getElementById('remote-video');
@@ -109,7 +101,6 @@
                 document.getElementById('login').style.display = 'none';
             });
 
-            // Ligar Chat
             conn = peer.connect(tid);
             conn.on('data', d => addBubble(d.orig, d.trans, false));
         }
