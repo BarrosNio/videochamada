@@ -3,59 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barros Connect - Final Fix</title>
+    <title>Barros Connect Max</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Roboto', sans-serif; background: #000; color: #fff; height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Roboto', sans-serif; background: #000; color: #fff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* 1. VÍDEO (Fixado em 35% da altura da tela) */
-        #video-area { height: 35vh; background: #111; position: relative; flex-shrink: 0; border-bottom: 2px solid #333; }
-        #remote-video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        /* VÍDEO FIXO NO TOPO */
+        #video-section { height: 35vh; background: #111; position: relative; flex-shrink: 0; border-bottom: 2px solid #333; }
+        video { background: #000; }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; }
         #local-video { position: absolute; top: 10px; right: 10px; width: 70px; height: 100px; border-radius: 12px; object-fit: cover; border: 2px solid #3b82f6; transform: scaleX(-1); z-index: 50; }
 
-        /* 2. CHAT (Ocupa o que sobra no meio) */
-        #chat-area { flex-grow: 1; position: relative; display: flex; flex-direction: column; background: #0a0a0a; overflow: hidden; }
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
+        /* CHAT NO MEIO */
+        #chat-section { flex: 1; display: flex; flex-direction: column; background: #0a0a0a; overflow: hidden; position: relative; }
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; }
 
-        /* 3. BARRA DE DIGITAR (Fixada no fundo absoluto) */
-        #input-area { height: 70px; background: #1a1a1a; padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #333; flex-shrink: 0; }
-        #msg-input { flex: 1; background: #2a2a2a; border-radius: 25px; padding: 12px 15px; color: #fff; border: none; outline: none; font-size: 16px; }
+        /* INPUT NO RODAPÉ */
+        #input-bar { position: absolute; bottom: 0; width: 100%; background: #1a1a1a; padding: 12px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #333; z-index: 100; }
+        #msg-input { flex: 1; background: #2a2a2a; border-radius: 25px; padding: 10px 15px; color: #fff; border: none; outline: none; font-size: 16px; }
 
-        .msg-box { padding: 10px 14px; border-radius: 18px; max-width: 85%; font-size: 14px; }
+        .msg-box { padding: 8px 14px; border-radius: 18px; max-width: 85%; }
         .msg-me { align-self: flex-end; background: #005c4b; border-bottom-right-radius: 2px; }
         .msg-friend { align-self: flex-start; background: #202c33; border-bottom-left-radius: 2px; }
-
-        #login-screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; items-center; justify-content: center; p: 20px; }
+        
+        #login { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <section id="video-area">
+    <section id="video-section">
         <video id="remote-video" autoplay playsinline></video>
         <video id="local-video" autoplay muted playsinline></video>
     </section>
 
-    <main id="chat-area">
-        <div class="p-2 border-b border-zinc-900 bg-zinc-900/50 flex justify-between text-[10px] font-bold text-blue-400">
-            <span>TRADUZINDO PARA INGLÊS</span>
+    <main id="chat-section">
+        <div class="p-2 border-b border-zinc-900 bg-zinc-900/50 flex justify-between text-[10px] font-bold text-blue-500">
+            <span id="conn-status">CONECTANDO...</span>
             <span id="typing" class="hidden animate-pulse">DIGITANDO...</span>
         </div>
         <div id="messages"></div>
+
+        <div id="input-bar">
+            <button onclick="sendWink()" class="text-2xl">💋</button>
+            <input id="msg-input" type="text" placeholder="Mensagem..." oninput="notifyTyping()">
+            <button onclick="sendMsg()" class="bg-blue-600 w-11 h-11 rounded-full flex items-center justify-center font-bold">➤</button>
+        </div>
     </main>
 
-    <footer id="input-area">
-        <button onclick="sendWink()" class="text-2xl">💋</button>
-        <input id="msg-input" type="text" placeholder="Escreva aqui..." oninput="notifyTyping()">
-        <button onclick="sendMsg()" class="bg-blue-600 w-11 h-11 rounded-full flex items-center justify-center font-bold">➤</button>
-    </footer>
-
-    <div id="login-screen">
+    <div id="login">
         <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-zinc-800 text-center">
-            <h1 class="text-blue-500 font-black text-xl mb-6">BARROS CONNECT</h1>
-            <div id="my-id" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-zinc-800 break-all" onclick="copyID()">GERANDO ID...</div>
+            <h1 class="text-blue-500 font-black text-xl mb-4 tracking-tighter">BARROS CONNECT MAX</h1>
+            <div id="my-id" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-zinc-800 break-all" onclick="copyID()">CARREGANDO ID...</div>
             <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-zinc-800 outline-none text-center" placeholder="ID DA AMIGA">
-            <button onclick="start()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR</button>
+            <button onclick="start()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR AGORA</button>
+            <p class="text-[9px] text-zinc-500 mt-4">Certifique-se que o link começa com HTTPS</p>
         </div>
     </div>
 
@@ -63,42 +66,59 @@
         const peer = new Peer();
         let conn, localStream;
 
-        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
-            localStream = s;
-            document.getElementById('local-video').srcObject = s;
-        });
+        // Forçar ativação da câmera
+        async function initCam() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('local-video').srcObject = localStream;
+            } catch (e) {
+                alert("Ative a câmera e o microfone para continuar.");
+            }
+        }
+        initCam();
 
         peer.on('open', id => document.getElementById('my-id').innerText = id);
 
-        // Receber Chamada
+        // Receber Chamada de Vídeo
         peer.on('call', call => {
             call.answer(localStream);
-            call.on('stream', s => {
-                const rv = document.getElementById('remote-video');
-                rv.srcObject = s;
-                rv.play();
-                document.getElementById('login-screen').style.display = 'none';
-            });
+            handleCall(call);
         });
 
-        peer.on('connection', c => { conn = c; setupChat(); });
+        // Receber Conexão de Chat
+        peer.on('connection', c => {
+            conn = c;
+            setupChat();
+        });
 
         function start() {
             const tid = document.getElementById('target-id').value;
             if(!tid) return;
+            
+            // Inicia Vídeo
             const call = peer.call(tid, localStream);
-            call.on('stream', s => {
-                const rv = document.getElementById('remote-video');
-                rv.srcObject = s;
-                rv.play();
-                document.getElementById('login-screen').style.display = 'none';
-            });
+            handleCall(call);
+            
+            // Inicia Chat
             conn = peer.connect(tid);
             setupChat();
         }
 
+        function handleCall(call) {
+            call.on('stream', s => {
+                const rv = document.getElementById('remote-video');
+                rv.srcObject = s;
+                // Forçar o play em navegadores mobile
+                rv.onloadedmetadata = () => {
+                    rv.play().catch(e => console.error("Erro no play automático:", e));
+                };
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('conn-status').innerText = "VÍDEO CONECTADO";
+            });
+        }
+
         function setupChat() {
-            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('login').style.display = 'none';
             conn.on('data', d => {
                 if(d.type === 'msg') addMsg(d.orig, d.trans, 'friend');
                 if(d.type === 'typing') {
@@ -111,11 +131,10 @@
         async function sendMsg() {
             const i = document.getElementById('msg-input');
             if(!i.value) return;
-            // Tradução rápida simplificada para o teste
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(i.value)}&langpair=pt|en`);
             const j = await res.json();
             const tr = j.responseData.translatedText;
-            if(conn) conn.send({type: 'msg', orig: i.value, trans: tr});
+            if(conn) conn.send({ type: 'msg', orig: i.value, trans: tr });
             addMsg(i.value, tr, 'me');
             i.value = '';
         }
@@ -124,14 +143,14 @@
             const b = document.getElementById('messages');
             b.innerHTML += `<div class="msg-box ${s==='me'?'msg-me':'msg-friend'} shadow-lg">
                 <p class="text-[9px] opacity-40 italic">${o}</p>
-                <p class="font-bold">${t}</p>
+                <p class="font-bold text-sm">${t}</p>
             </div>`;
             b.scrollTop = b.scrollHeight;
         }
 
-        function notifyTyping() { if(conn) conn.send({type: 'typing'}); }
+        function notifyTyping() { if(conn) conn.send({ type: 'typing' }); }
         function copyID() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("ID Copiado!"); }
-        function sendWink() { if(conn) conn.send({type: 'msg', orig: '💋', trans: 'MANDOU UM BEIJO!'}); addMsg('💋', 'MANDOU UM BEIJO!', 'me'); }
+        function sendWink() { if(conn) conn.send({ type: 'msg', orig: '💋', trans: 'MANDOU UM BEIJO!' }); addMsg('💋', 'MANDOU UM BEIJO!', 'me'); }
     </script>
 </body>
 </html>
