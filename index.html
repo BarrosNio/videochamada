@@ -10,42 +10,45 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { height: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; }
 
-        /* VÍDEO REMOTO (TELA CHEIA) */
-        #remote-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; background: #111; }
+        /* VÍDEO FUNDO TOTAL */
+        #remote-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; background: #000; }
+        #local-video { position: fixed; top: 20px; right: 20px; width: 80px; height: 110px; border-radius: 12px; object-fit: cover; border: 1.5px solid rgba(255,255,255,0.3); z-index: 100; transform: scaleX(-1); }
 
-        /* SEU VÍDEO (MINIATURA) */
-        #local-video { position: fixed; top: 20px; right: 20px; width: 85px; height: 125px; border-radius: 12px; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); z-index: 100; transform: scaleX(-1); }
+        /* CAMADA UI */
+        #ui-layer { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; }
 
-        /* INTERFACE */
-        #ui-overlay { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; }
-
-        /* MENSAGENS FLUTUANTES */
+        /* CHAT FLUTUANTE */
         #messages { padding: 20px; display: flex; flex-direction: column; gap: 8px; max-height: 40%; overflow-y: auto; pointer-events: auto; }
-        .msg-bubble { background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(10px); padding: 8px 14px; border-radius: 15px; color: white; font-size: 13px; align-self: flex-start; max-width: 80%; border: 1px solid rgba(255,255,255,0.1); }
-        .msg-me { background: rgba(59, 130, 246, 0.5); align-self: flex-end; }
-        .chat-img { max-width: 150px; border-radius: 10px; margin-top: 5px; }
+        .msg-bubble { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); padding: 8px 12px; border-radius: 15px; color: white; font-size: 13px; align-self: flex-start; max-width: 85%; border: 0.5px solid rgba(255,255,255,0.1); }
+        .msg-me { align-self: flex-end; background: rgba(59, 130, 246, 0.5); }
 
-        /* PAINEL DE MÍDIA (GAVETA) */
-        #media-drawer { position: absolute; bottom: 85px; left: 15px; right: 15px; background: rgba(20,20,20,0.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 15px; display: none; pointer-events: auto; border: 1px solid rgba(255,255,255,0.1); }
+        /* INPUT */
+        #input-bar { padding: 20px; display: flex; align-items: center; gap: 10px; pointer-events: auto; background: linear-gradient(transparent, rgba(0,0,0,0.8)); }
+        .input-box { flex: 1; background: rgba(255,255,255,0.2); border-radius: 30px; display: flex; align-items: center; padding: 2px 15px; }
+        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 15px; }
 
-        /* BARRA DE COMANDO */
-        #input-bar { padding: 15px; display: flex; align-items: center; gap: 10px; pointer-events: auto; background: linear-gradient(transparent, rgba(0,0,0,0.9)); }
-        .input-box { flex: 1; background: rgba(255,255,255,0.15); border-radius: 30px; display: flex; align-items: center; padding: 2px 15px; border: 1px solid rgba(255,255,255,0.1); }
-        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; }
+        /* GAVETA MÍDIA */
+        #media-drawer { position: absolute; bottom: 85px; left: 15px; right: 15px; background: rgba(15,15,15,0.95); border-radius: 20px; padding: 15px; display: none; pointer-events: auto; }
 
-        #login { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; items-center; justify-content: center; padding: 20px; }
+        /* LOGIN */
+        #login { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; items-center; justify-content: center; padding: 20px; pointer-events: auto; }
     </style>
 </head>
 <body>
 
-    <video id="remote-video" autoplay playsinline></video>
+    <video id="remote-video" autoplay playsinline muted></video>
     <video id="local-video" autoplay muted playsinline></video>
 
-    <div id="ui-overlay">
-        <div class="absolute top-8 left-5 pointer-events-auto">
-            <select id="lang-select" class="bg-black/50 text-[10px] text-blue-400 p-2 rounded-full border border-white/10 outline-none uppercase font-bold">
-                <option value="en">Inglês</option><option value="ru">Russo</option>
-                <option value="es">Espanhol</option><option value="pt" selected>Português</option>
+    <div id="ui-layer">
+        <div class="absolute top-10 left-5 pointer-events-auto">
+            <select id="lang-select" class="bg-black/60 text-white text-[10px] font-bold p-2 rounded-full border border-white/20 outline-none uppercase">
+                <option value="es">Espanhol</option>
+                <option value="ru">Russo</option>
+                <option value="tl">Filipino</option>
+                <option value="en" selected>Inglês</option>
+                <option value="zh-TW">Chinês</option>
+                <option value="uk">Ucraniano</option>
+                <option value="pt">Português</option>
             </select>
         </div>
 
@@ -53,42 +56,29 @@
 
         <div id="media-drawer">
             <div class="flex justify-around mb-4">
-                <label class="cursor-pointer text-center">
-                    <span class="text-2xl block">📷</span>
-                    <span class="text-[10px] text-zinc-400">FOTO</span>
-                    <input type="file" accept="image/*" class="hidden" onchange="sendFile(this, 'img')">
-                </label>
-                <label class="cursor-pointer text-center">
-                    <span class="text-2xl block">🎵</span>
-                    <span class="text-[10px] text-zinc-400">MÚSICA</span>
-                    <input type="file" accept="audio/*" class="hidden" onchange="sendFile(this, 'audio')">
-                </label>
+                <label class="cursor-pointer">📷<input type="file" accept="image/*" class="hidden" onchange="sendF(this, 'img')"></label>
+                <label class="cursor-pointer">🎵<input type="file" accept="audio/*" class="hidden" onchange="sendF(this, 'audio')"></label>
             </div>
-            <div id="emojis" class="flex flex-wrap gap-3 justify-center text-2xl">
-                <span onclick="addEmoji('❤️')" class="cursor-pointer">❤️</span>
-                <span onclick="addEmoji('🔥')" class="cursor-pointer">🔥</span>
-                <span onclick="addEmoji('😘')" class="cursor-pointer">😘</span>
-                <span onclick="addEmoji('😍')" class="cursor-pointer">😍</span>
-                <span onclick="addEmoji('🌹')" class="cursor-pointer">🌹</span>
-                <span onclick="addEmoji('✨')" class="cursor-pointer">✨</span>
+            <div class="flex justify-center gap-4 text-2xl">
+                <span onclick="addE('❤️')">❤️</span><span onclick="addE('🔥')">🔥</span><span onclick="addE('😘')">😘</span>
             </div>
         </div>
 
         <div id="input-bar">
-            <button onclick="toggleDrawer()" class="text-2xl">➕</button>
+            <button onclick="toggleM()" class="text-2xl">➕</button>
             <div class="input-box">
-                <input id="msg-input" type="text" placeholder="Escreva algo...">
+                <input id="msg-input" type="text" placeholder="Tradução ativa...">
             </div>
-            <button onclick="sendMsg()" class="w-11 h-11 bg-blue-600 rounded-full flex items-center justify-center">➤</button>
+            <button onclick="send()" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">➤</button>
         </div>
     </div>
 
     <div id="login">
-        <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-white/10 text-center shadow-2xl">
-            <h1 class="text-blue-500 font-black italic text-xl mb-6">BARROS CONNECT</h1>
-            <div id="my-id-label" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-white/5 break-all" onclick="copyID()">GERANDO ID...</div>
+        <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-white/10 text-center">
+            <h2 class="text-blue-500 font-black italic text-xl mb-6">BARROS CONNECT</h2>
+            <div id="my-id-label" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-white/10 break-all cursor-pointer" onclick="copyID()">GERANDO ID...</div>
             <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-white/10 outline-none text-center text-white" placeholder="ID DA AMIGA">
-            <button onclick="startApp()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase tracking-widest">ENTRAR</button>
+            <button onclick="startApp()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR</button>
         </div>
     </div>
 
@@ -96,77 +86,85 @@
         const peer = new Peer({ config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}});
         let conn, localStream;
 
-        navigator.mediaDevices.getUserMedia({video: { facingMode: "user" }, audio: true}).then(s => {
-            localStream = s; document.getElementById('local-video').srcObject = s;
+        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
+            localStream = s;
+            document.getElementById('local-video').srcObject = s;
         });
 
         peer.on('open', id => document.getElementById('my-id-label').innerText = id);
-        
+
+        // ESSENCIAL: Ouvir quando ela ligar
         peer.on('call', call => {
             call.answer(localStream);
-            call.on('stream', s => {
-                const rv = document.getElementById('remote-video');
-                rv.srcObject = s; rv.play();
-                document.getElementById('login').style.display = 'none';
-            });
+            setupStream(call);
         });
 
-        peer.on('connection', c => { conn = c; setupChat(); });
+        peer.on('connection', c => {
+            conn = c;
+            setupChat();
+        });
 
         function startApp() {
             const tid = document.getElementById('target-id').value;
             if(!tid) return;
-            peer.call(tid, localStream).on('stream', s => {
+            const call = peer.call(tid, localStream);
+            setupStream(call);
+            conn = peer.connect(tid);
+            setupChat();
+        }
+
+        function setupStream(call) {
+            call.on('stream', s => {
                 const rv = document.getElementById('remote-video');
-                rv.srcObject = s; rv.play();
+                rv.srcObject = s;
+                rv.play().catch(() => {
+                    rv.muted = true;
+                    rv.play();
+                });
+                document.getElementById('login').style.display = 'none';
             });
-            conn = peer.connect(tid); setupChat();
         }
 
         function setupChat() {
             document.getElementById('login').style.display = 'none';
             conn.on('data', d => {
-                addMsg(d.orig, d.trans, 'friend', d.file, d.fileType);
+                if(d.type === 'msg') addM(d.orig, d.trans, 'friend', d.file, d.fType);
             });
         }
 
-        async function sendMsg() {
+        async function send() {
             const i = document.getElementById('msg-input'), l = document.getElementById('lang-select').value;
             if(!i.value) return;
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(i.value)}&langpair=pt|${l}`);
             const j = await res.json();
             const tr = j.responseData.translatedText;
             if(conn) conn.send({type: 'msg', orig: i.value, trans: tr});
-            addMsg(i.value, tr, 'me'); i.value = '';
+            addM(i.value, tr, 'me');
+            i.value = '';
         }
 
-        function sendFile(input, type) {
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = () => {
-                if(conn) conn.send({type: 'msg', file: reader.result, fileType: type, orig: type==='img'?'📷 Foto':'🎵 Música', trans: type==='img'?'Sent a photo':'Sent a song'});
-                addMsg(type==='img'?'📷 Foto':'🎵 Música', type==='img'?'Sent a photo':'Sent a song', 'me', reader.result, type);
-                toggleDrawer();
+        function sendF(input, type) {
+            const r = new FileReader();
+            r.onload = () => {
+                if(conn) conn.send({type:'msg', file: r.result, fType: type, orig: 'Mídia', trans: 'Sent file'});
+                addM('Mídia', 'Sent file', 'me', r.result, type);
+                toggleM();
             };
-            reader.readAsDataURL(file);
+            r.readAsDataURL(input.files[0]);
         }
 
-        function addMsg(o, t, s, file = null, fType = null) {
+        function addM(o, t, s, file, type) {
             const b = document.getElementById('messages');
-            let content = `<p class="text-[9px] opacity-60">${o}</p><p>${t}</p>`;
-            if(file && fType === 'img') content += `<img src="${file}" class="chat-img">`;
-            if(file && fType === 'audio') content += `<audio src="${file}" controls class="w-full mt-2 h-8 filter invert"></audio>`;
-            
+            let content = `<p class="text-[10px] opacity-60">${o}</p><p>${t}</p>`;
+            if(file && type === 'img') content += `<img src="${file}" class="max-w-[150px] rounded-lg mt-2">`;
+            if(file && type === 'audio') content += `<audio src="${file}" controls class="w-full mt-2 filter invert"></audio>`;
             b.innerHTML += `<div class="msg-bubble ${s==='me'?'msg-me':''}">${content}</div>`;
             b.scrollTop = b.scrollHeight;
         }
 
-        function addEmoji(e) { document.getElementById('msg-input').value += e; }
-        function toggleDrawer() { 
-            const d = document.getElementById('media-drawer');
-            d.style.display = d.style.display === 'block' ? 'none' : 'block';
-        }
-        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id-label').innerText); alert("ID Copiado!"); }
+        function addE(e) { document.getElementById('msg-input').value += e; }
+        function toggleM() { const d = document.getElementById('media-drawer'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
+        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id-label').innerText); alert("Copiado!"); }
     </script>
 </body>
 </html>
