@@ -3,45 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barros Connect - Fix</title>
+    <title>Barros Connect - Ultra Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { font-family: 'Roboto', sans-serif; background: #000; color: #fff; height: 100vh; margin: 0; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* ÁREA DE VÍDEO FIXA (Não muda de tamanho) */
-        #video-section { height: 200px; background: #111; position: relative; flex-shrink: 0; border-bottom: 2px solid #333; width: 100%; }
+        /* ÁREA DE VÍDEO: Ocupa o topo fixo */
+        #video-container { height: 35vh; background: #111; position: relative; flex-shrink: 0; border-bottom: 2px solid #333; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; background: #000; }
-        #local-video { position: absolute; top: 10px; right: 10px; width: 60px; height: 80px; border-radius: 10px; object-fit: cover; border: 2px solid #3b82f6; transform: scaleX(-1); z-index: 60; }
+        #local-video { position: absolute; top: 10px; right: 10px; width: 80px; height: 110px; border-radius: 12px; object-fit: cover; border: 2px solid #3b82f6; transform: scaleX(-1); z-index: 50; }
 
-        /* ÁREA DE CHAT FLEXÍVEL */
-        #chat-section { flex: 1; position: relative; display: flex; flex-direction: column; background: #0a0a0a; overflow: hidden; }
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 70px; }
+        /* ÁREA DE CHAT: Ocupa o restante da tela */
+        #chat-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #0a0a0a; position: relative; }
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; padding-bottom: 80px; }
 
-        /* INPUT FIXO NO RODAPÉ */
-        #input-bar { position: absolute; bottom: 0; width: 100%; background: #1a1a1a; padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #333; z-index: 100; }
-        #msg-input { flex: 1; background: #2a2a2a; border-radius: 20px; padding: 10px 15px; color: #fff; border: none; font-size: 14px; outline: none; }
+        /* INPUT: Fixo no rodapé absoluto */
+        #input-bar { position: absolute; bottom: 0; width: 100%; background: #1a1a1a; padding: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #333; z-index: 100; }
+        #msg-input { flex: 1; background: #2a2a2a; border-radius: 25px; padding: 10px 18px; color: #fff; border: none; outline: none; font-size: 16px; }
 
-        .msg-box { padding: 10px 14px; border-radius: 18px; max-width: 80%; word-wrap: break-word; font-size: 14px; }
-        .msg-me { align-self: flex-end; background: #005c4b; }
-        .msg-friend { align-self: flex-start; background: #202c33; }
-
-        #login { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; items-center; justify-content: center; padding: 20px; }
+        .msg-box { padding: 8px 14px; border-radius: 15px; max-width: 80%; font-size: 14px; line-height: 1.4; }
+        .msg-me { align-self: flex-end; background: #005c4b; border-bottom-right-radius: 2px; }
+        .msg-friend { align-self: flex-start; background: #202c33; border-bottom-left-radius: 2px; }
+        
+        #login { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <section id="video-section">
+    <section id="video-container">
         <video id="remote-video" autoplay playsinline></video>
         <video id="local-video" autoplay muted playsinline></video>
     </section>
 
     <main id="chat-section">
-        <div class="p-2 border-b border-zinc-900 bg-zinc-900/30 flex justify-between">
-            <select id="lang-select" class="bg-transparent text-[10px] font-bold text-blue-400 outline-none">
-                <option value="en">INGLÊS</option>
-                <option value="es">ESPANHOL</option>
-                <option value="pt">PORTUGUÊS</option>
+        <div class="p-2 border-b border-zinc-900 bg-zinc-900/50 flex justify-between">
+            <select id="lang-select" class="bg-transparent text-[10px] font-bold text-blue-400 outline-none uppercase">
+                <option value="en">INGLÊS</option><option value="pt">PORTUGUÊS</option><option value="es">ESPANHOL</option>
             </select>
             <p id="typing-ui" class="text-[9px] text-blue-500 hidden animate-pulse font-bold">DIGITANDO...</p>
         </div>
@@ -49,18 +47,18 @@
         <div id="messages"></div>
 
         <div id="input-bar">
-            <button onclick="sendWink()" class="text-xl">💋</button>
-            <input id="msg-input" type="text" placeholder="Mensagem..." oninput="isTyping()">
-            <button onclick="sendMsg()" class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center">➤</button>
+            <button onclick="sendWink()" class="text-2xl">💋</button>
+            <input id="msg-input" type="text" placeholder="Escreva aqui..." oninput="isTyping()">
+            <button onclick="sendMsg()" class="bg-blue-600 w-11 h-11 rounded-full flex items-center justify-center font-bold">➤</button>
         </div>
     </main>
 
     <div id="login">
         <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-zinc-800 text-center">
-            <h2 class="text-blue-500 font-black italic text-xl mb-6 uppercase tracking-tighter">Barros Connect</h2>
-            <div id="my-id" class="bg-black p-3 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-zinc-800" onclick="copyID()">GERANDO ID...</div>
+            <h1 class="text-blue-500 font-black text-xl mb-6 tracking-tighter">BARROS CONNECT</h1>
+            <div id="my-id" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-zinc-800 break-all" onclick="copyID()">CARREGANDO ID...</div>
             <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-zinc-800 outline-none text-center" placeholder="ID DA AMIGA">
-            <button onclick="start()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR</button>
+            <button onclick="start()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase shadow-lg shadow-blue-900/40">CONECTAR AGORA</button>
         </div>
     </div>
 
@@ -68,51 +66,40 @@
         const peer = new Peer();
         let conn, localStream;
 
-        // Tenta pegar a câmera imediatamente
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
             localStream = s;
             document.getElementById('local-video').srcObject = s;
-        }).catch(err => alert("Por favor, ative a câmera e microfone!"));
+        });
 
         peer.on('open', id => document.getElementById('my-id').innerText = id);
 
-        // Quando alguém te liga
         peer.on('call', call => {
             call.answer(localStream);
-            call.on('stream', s => {
-                const remoteVid = document.getElementById('remote-video');
-                remoteVid.srcObject = s;
-                remoteVid.play();
-                document.getElementById('login').style.display = 'none';
-            });
+            handleStream(call);
         });
 
-        // Quando alguém conecta no chat
-        peer.on('connection', c => {
-            conn = c;
-            initChat();
-            document.getElementById('login').style.display = 'none';
-        });
+        peer.on('connection', c => { conn = c; setupChat(); });
 
         function start() {
             const tid = document.getElementById('target-id').value;
             if(!tid) return;
-
-            // Liga o vídeo
             const call = peer.call(tid, localStream);
-            call.on('stream', s => {
-                const remoteVid = document.getElementById('remote-video');
-                remoteVid.srcObject = s;
-                remoteVid.play();
-            });
-
-            // Liga o chat
+            handleStream(call);
             conn = peer.connect(tid);
-            initChat();
-            document.getElementById('login').style.display = 'none';
+            setupChat();
         }
 
-        function initChat() {
+        function handleStream(call) {
+            call.on('stream', s => {
+                const rv = document.getElementById('remote-video');
+                rv.srcObject = s;
+                rv.onloadedmetadata = () => rv.play();
+                document.getElementById('login').style.display = 'none';
+            });
+        }
+
+        function setupChat() {
+            document.getElementById('login').style.display = 'none';
             conn.on('data', d => {
                 if(d.type === 'msg') addMsg(d.orig, d.trans, 'friend');
                 if(d.type === 'typing') {
@@ -123,20 +110,18 @@
         }
 
         async function sendMsg() {
-            const i = document.getElementById('msg-input');
-            const l = document.getElementById('lang-select').value;
+            const i = document.getElementById('msg-input'), l = document.getElementById('lang-select').value;
             if(!i.value) return;
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(i.value)}&langpair=pt|${l}`);
             const j = await res.json();
             const tr = j.responseData.translatedText;
             if(conn) conn.send({type: 'msg', orig: i.value, trans: tr});
-            addMsg(i.value, tr, 'me');
-            i.value = '';
+            addMsg(i.value, tr, 'me'); i.value = '';
         }
 
         function addMsg(o, t, s) {
             const b = document.getElementById('messages');
-            b.innerHTML += `<div class="msg-box ${s === 'me' ? 'msg-me' : 'msg-friend'} shadow-md">
+            b.innerHTML += `<div class="msg-box ${s==='me'?'msg-me':'msg-friend'} shadow-md">
                 <p class="text-[9px] opacity-40 italic">${o}</p>
                 <p class="font-bold">${t}</p>
             </div>`;
@@ -144,7 +129,8 @@
         }
 
         function isTyping() { if(conn) conn.send({type: 'typing'}); }
-        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("Copiado!"); }
+        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("ID Copiado!"); }
+        function sendWink() { if(conn) conn.send({type: 'msg', orig: '💋', trans: 'MANDOU UM BEIJO!'}); addMsg('💋', 'MANDOU UM BEIJO!', 'me'); }
     </script>
 </body>
 </html>
