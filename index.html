@@ -3,174 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barros Connect - Waplog Edition</title>
+    <title>Barros Connect - VIP Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body, html { height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
 
-        /* VÍDEO REMOTO (FUNDO TOTAL) */
-        #remote-video {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: cover; z-index: 5;
-            background: #111;
-        }
+        /* VÍDEO REMOTO (TELA CHEIA) */
+        #remote-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; background: #111; }
+        
+        /* SEU VÍDEO (CANTO) */
+        #local-video { position: fixed; top: 20px; right: 20px; width: 90px; height: 130px; border-radius: 15px; object-fit: cover; border: 2px solid rgba(255,255,255,0.4); z-index: 100; transform: scaleX(-1); }
 
-        /* SEU VÍDEO (BALÃO FLUTUANTE) */
-        #local-video {
-            position: fixed; top: 20px; right: 20px;
-            width: 90px; height: 130px;
-            border-radius: 15px; object-fit: cover;
-            border: 2px solid rgba(255,255,255,0.4);
-            z-index: 100; transform: scaleX(-1);
-        }
+        /* INTERFACE FLUTUANTE */
+        #interface { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; }
+        
+        #messages { padding: 20px; display: flex; flex-direction: column; gap: 8px; max-height: 40%; overflow-y: auto; pointer-events: auto; }
+        .bubble { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); padding: 10px 14px; border-radius: 18px; color: white; font-size: 14px; max-width: 80%; align-self: flex-start; border: 1px solid rgba(255,255,255,0.1); }
+        .bubble-me { background: rgba(37, 99, 235, 0.5); align-self: flex-end; }
 
-        /* INTERFACE DO CHAT (SOBREPOSIÇÃO) */
-        #interface {
-            position: fixed; inset: 0;
-            z-index: 50; display: flex;
-            flex-direction: column; justify-content: flex-end;
-            pointer-events: none;
-        }
-
-        #messages {
-            padding: 20px; display: flex;
-            flex-direction: column; gap: 8px;
-            max-height: 45%; overflow-y: auto;
-            pointer-events: auto;
-        }
-
-        .bubble {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            padding: 10px 14px; border-radius: 18px;
-            color: white; font-size: 14px;
-            max-width: 75%; align-self: flex-start;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .bubble-me { background: rgba(37, 99, 235, 0.6); align-self: flex-end; }
+        /* WINKS GIGANTES */
+        #wink-layer { position: fixed; inset: 0; z-index: 200; display: none; align-items: center; justify-content: center; pointer-events: none; }
+        .wink-anim { animation: msnWink 3s ease-in-out forwards; width: 70%; max-width: 300px; }
+        @keyframes msnWink { 0% { transform: scale(0); opacity: 0; } 20% { transform: scale(1.1); opacity: 1; } 80% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 
         /* BARRA DE BAIXO */
-        #bottom-bar {
-            padding: 15px; display: flex; align-items: center;
-            gap: 12px; pointer-events: auto;
-            background: linear-gradient(transparent, rgba(0,0,0,0.9));
-        }
+        #input-bar { padding: 15px; display: flex; align-items: center; gap: 10px; pointer-events: auto; background: linear-gradient(transparent, rgba(0,0,0,0.8)); }
+        .input-box { flex: 1; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); border-radius: 30px; display: flex; align-items: center; padding: 5px 15px; border: 1px solid rgba(255,255,255,0.2); }
+        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
 
-        .input-wrap {
-            flex: 1; background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(20px); border-radius: 30px;
-            padding: 2px 15px; display: flex; align-items: center;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
+        /* PAINEL EMOJI */
+        #emoji-panel { position: absolute; bottom: 85px; left: 15px; right: 15px; background: rgba(20,20,20,0.95); border-radius: 25px; padding: 15px; display: none; z-index: 150; pointer-events: auto; border: 1px solid #333; }
 
-        #msg-input {
-            flex: 1; background: transparent; border: none;
-            color: white; padding: 10px; outline: none; font-size: 16px;
-        }
-
-        #login {
-            position: fixed; inset: 0; background: #000;
-            z-index: 1000; display: flex; align-items: center;
-            justify-content: center; padding: 20px;
-        }
+        #login { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; items-center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <video id="remote-video" autoplay playsinline muted></video>
+    <div id="wink-layer"><img id="wink-img" src="" class="wink-anim"></div>
+
+    <video id="remote-video" autoplay playsinline></video>
     <video id="local-video" autoplay muted playsinline></video>
 
     <div id="interface">
-        <div id="messages"></div>
-        <div id="bottom-bar">
-            <div class="input-wrap">
-                <select id="lang" class="bg-transparent text-white text-[10px] mr-2 outline-none">
-                    <option value="en">EN</option><option value="pt">PT</option><option value="ru">RU</option>
-                </select>
-                <input id="msg-input" type="text" placeholder="Envie uma mensagem...">
+        <div class="absolute top-10 left-5 pointer-events-auto">
+            <select id="lang-select" class="bg-black/50 text-white text-[10px] p-2 rounded-full border border-white/20 outline-none font-bold uppercase">
+                <option value="en">Inglês</option><option value="es">Espanhol</option><option value="ru">Russo</option>
+                <option value="tl">Filipino</option><option value="zh-TW">Chinês (T)</option><option value="uk">Ucraniano</option>
+                <option value="pt">Português</option>
+            </select>
+        </div>
+
+        <div id="messages" class="no-scrollbar"></div>
+
+        <div id="emoji-panel">
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="sendWink('kiss')" class="bg-blue-600/40 p-2 rounded-xl text-[10px] font-bold">💋 MANDAR BEIJO</button>
+                <button onclick="sendWink('heart')" class="bg-red-600/40 p-2 rounded-xl text-[10px] font-bold">❤️ MANDAR CORAÇÃO</button>
             </div>
-            <button onclick="sendMsg()" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl shadow-lg">➤</button>
+            <div id="emoji-grid" class="flex flex-wrap gap-2 text-2xl justify-center overflow-y-auto max-h-40"></div>
+        </div>
+
+        <div id="input-bar">
+            <button onclick="toggleEmoji()" class="text-2xl">😊</button>
+            <div class="input-box">
+                <input id="msg-input" type="text" placeholder="Tradução automática ativa...">
+            </div>
+            <button onclick="sendMsg()" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg">➤</button>
         </div>
     </div>
 
     <div id="login">
         <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-zinc-800 text-center">
-            <h2 class="text-blue-500 font-bold text-xl mb-6">BARROS CONNECT</h2>
-            <div id="my-id" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] break-all" onclick="copyID()">GERANDO...</div>
-            <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-zinc-800 text-white text-center" placeholder="ID DO PARCEIRO">
-            <button onclick="connect()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold">CONECTAR</button>
+            <h1 class="text-blue-500 font-black italic text-xl mb-6">BARROS CONNECT</h1>
+            <div id="my-id-ui" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] break-all border border-zinc-800" onclick="copyID()">GERANDO ID...</div>
+            <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-zinc-800 text-white text-center" placeholder="ID DA AMIGA">
+            <button onclick="startApp()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase tracking-widest">CONECTAR</button>
         </div>
     </div>
 
     <script>
         const peer = new Peer({ config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}});
         let conn, localStream;
+        const emojis = ["😀","😂","😍","🥰","😘","😭","😡","😱","👍","🙌","❤️","🔥","✨","🚀","💯"];
+
+        // Carregar Emojis
+        emojis.forEach(e => {
+            document.getElementById('emoji-grid').innerHTML += `<span class="cursor-pointer" onclick="document.getElementById('msg-input').value += '${e}'">${e}</span>`;
+        });
 
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
             localStream = s; document.getElementById('local-video').srcObject = s;
         });
 
-        peer.on('open', id => document.getElementById('my-id').innerText = id);
-
+        peer.on('open', id => document.getElementById('my-id-ui').innerText = id);
         peer.on('call', call => {
             call.answer(localStream);
-            setupRemoteVideo(call);
-        });
-
-        peer.on('connection', c => { conn = c; setupChat(); });
-
-        function connect() {
-            const tid = document.getElementById('target-id').value;
-            if(!tid) return;
-            const call = peer.call(tid, localStream);
-            setupRemoteVideo(call);
-            conn = peer.connect(tid);
-            setupChat();
-        }
-
-        function setupRemoteVideo(call) {
             call.on('stream', s => {
                 const rv = document.getElementById('remote-video');
-                rv.srcObject = s;
-                rv.muted = false; // Desmuta após o sinal chegar
-                rv.play();
+                rv.srcObject = s; rv.play();
                 document.getElementById('login').style.display = 'none';
             });
+        });
+        peer.on('connection', c => { conn = c; setupChat(); });
+
+        function startApp() {
+            const tid = document.getElementById('target-id').value;
+            if(!tid) return;
+            peer.call(tid, localStream).on('stream', s => {
+                const rv = document.getElementById('remote-video');
+                rv.srcObject = s; rv.play();
+            });
+            conn = peer.connect(tid); setupChat();
         }
 
         function setupChat() {
             document.getElementById('login').style.display = 'none';
             conn.on('data', d => {
                 if(d.type === 'msg') addBubble(d.orig, d.trans, false);
+                if(d.type === 'wink') receiveWink(d.kind);
             });
         }
 
         async function sendMsg() {
-            const i = document.getElementById('msg-input'), l = document.getElementById('lang').value;
+            const i = document.getElementById('msg-input'), l = document.getElementById('lang-select').value;
             if(!i.value) return;
+            // API de Tradução Melhorada
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(i.value)}&langpair=pt|${l}`);
             const j = await res.json();
             const tr = j.responseData.translatedText;
             if(conn) conn.send({type: 'msg', orig: i.value, trans: tr});
             addBubble(i.value, tr, true);
             i.value = '';
+            document.getElementById('emoji-panel').style.display = 'none';
         }
 
         function addBubble(o, t, isMe) {
             const m = document.getElementById('messages');
             m.innerHTML += `<div class="bubble ${isMe ? 'bubble-me' : ''}">
-                <p class="text-[10px] opacity-50">${o}</p>
-                <p class="font-semibold">${t}</p>
+                <p class="text-[9px] opacity-60 italic">${o}</p>
+                <p class="font-medium">${t}</p>
             </div>`;
             m.scrollTop = m.scrollHeight;
         }
 
-        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("ID Copiado!"); }
+        function sendWink(kind) {
+            if(conn) conn.send({type: 'wink', kind: kind});
+            receiveWink(kind);
+            document.getElementById('emoji-panel').style.display = 'none';
+        }
+
+        function receiveWink(kind) {
+            const layer = document.getElementById('wink-layer');
+            const img = document.getElementById('wink-img');
+            const sound = new Audio(kind === 'kiss' ? "https://www.myinstants.com/media/sounds/kiss-sound-effect.mp3" : "https://www.myinstants.com/media/sounds/heart-beat-sound-effect.mp3");
+            img.src = kind === 'kiss' ? "https://media.giphy.com/media/3o7TKLv3fDYLxH8hW0/giphy.gif" : "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHR0OHI1Znd6bmZ6Znd6bmZ6Znd6bmZ6Znd6bmZ6Znd6bmZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1z/v0OOn2Z7906V5S63v2/giphy.gif";
+            layer.style.display = 'flex';
+            sound.play();
+            setTimeout(() => layer.style.display = 'none', 3000);
+        }
+
+        function toggleEmoji() {
+            const p = document.getElementById('emoji-panel');
+            p.style.display = p.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id-ui').innerText); alert("ID Copiado!"); }
     </script>
 </body>
 </html>
