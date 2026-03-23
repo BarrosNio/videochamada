@@ -3,35 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barros Connect - Waplog Premium</title>
+    <title>Barros Connect - Waplog Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
-        /* VÍDEO FUNDO TOTAL */
-        #remote-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; background: #000; }
-        #local-video { position: fixed; top: 20px; right: 20px; width: 80px; height: 110px; border-radius: 12px; object-fit: cover; border: 1.5px solid rgba(255,255,255,0.3); z-index: 100; transform: scaleX(-1); }
+        /* VÍDEO REMOTO (FUNDO TOTAL) */
+        #remote-video {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover; z-index: 5;
+            background: #111;
+        }
 
-        /* CAMADA UI */
-        #ui-layer { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; }
+        /* SEU VÍDEO (BALÃO FLUTUANTE) */
+        #local-video {
+            position: fixed; top: 20px; right: 20px;
+            width: 90px; height: 130px;
+            border-radius: 15px; object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.4);
+            z-index: 100; transform: scaleX(-1);
+        }
 
-        /* CHAT FLUTUANTE */
-        #messages { padding: 20px; display: flex; flex-direction: column; gap: 8px; max-height: 40%; overflow-y: auto; pointer-events: auto; }
-        .msg-bubble { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); padding: 8px 12px; border-radius: 15px; color: white; font-size: 13px; align-self: flex-start; max-width: 85%; border: 0.5px solid rgba(255,255,255,0.1); }
-        .msg-me { align-self: flex-end; background: rgba(59, 130, 246, 0.5); }
+        /* INTERFACE DO CHAT (SOBREPOSIÇÃO) */
+        #interface {
+            position: fixed; inset: 0;
+            z-index: 50; display: flex;
+            flex-direction: column; justify-content: flex-end;
+            pointer-events: none;
+        }
 
-        /* INPUT */
-        #input-bar { padding: 20px; display: flex; align-items: center; gap: 10px; pointer-events: auto; background: linear-gradient(transparent, rgba(0,0,0,0.8)); }
-        .input-box { flex: 1; background: rgba(255,255,255,0.2); border-radius: 30px; display: flex; align-items: center; padding: 2px 15px; }
-        #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 15px; }
+        #messages {
+            padding: 20px; display: flex;
+            flex-direction: column; gap: 8px;
+            max-height: 45%; overflow-y: auto;
+            pointer-events: auto;
+        }
 
-        /* GAVETA MÍDIA */
-        #media-drawer { position: absolute; bottom: 85px; left: 15px; right: 15px; background: rgba(15,15,15,0.95); border-radius: 20px; padding: 15px; display: none; pointer-events: auto; }
+        .bubble {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 10px 14px; border-radius: 18px;
+            color: white; font-size: 14px;
+            max-width: 75%; align-self: flex-start;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
 
-        /* LOGIN */
-        #login { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; items-center; justify-content: center; padding: 20px; pointer-events: auto; }
+        .bubble-me { background: rgba(37, 99, 235, 0.6); align-self: flex-end; }
+
+        /* BARRA DE BAIXO */
+        #bottom-bar {
+            padding: 15px; display: flex; align-items: center;
+            gap: 12px; pointer-events: auto;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+        }
+
+        .input-wrap {
+            flex: 1; background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(20px); border-radius: 30px;
+            padding: 2px 15px; display: flex; align-items: center;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        #msg-input {
+            flex: 1; background: transparent; border: none;
+            color: white; padding: 10px; outline: none; font-size: 16px;
+        }
+
+        #login {
+            position: fixed; inset: 0; background: #000;
+            z-index: 1000; display: flex; align-items: center;
+            justify-content: center; padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -39,46 +85,25 @@
     <video id="remote-video" autoplay playsinline muted></video>
     <video id="local-video" autoplay muted playsinline></video>
 
-    <div id="ui-layer">
-        <div class="absolute top-10 left-5 pointer-events-auto">
-            <select id="lang-select" class="bg-black/60 text-white text-[10px] font-bold p-2 rounded-full border border-white/20 outline-none uppercase">
-                <option value="es">Espanhol</option>
-                <option value="ru">Russo</option>
-                <option value="tl">Filipino</option>
-                <option value="en" selected>Inglês</option>
-                <option value="zh-TW">Chinês</option>
-                <option value="uk">Ucraniano</option>
-                <option value="pt">Português</option>
-            </select>
-        </div>
-
+    <div id="interface">
         <div id="messages"></div>
-
-        <div id="media-drawer">
-            <div class="flex justify-around mb-4">
-                <label class="cursor-pointer">📷<input type="file" accept="image/*" class="hidden" onchange="sendF(this, 'img')"></label>
-                <label class="cursor-pointer">🎵<input type="file" accept="audio/*" class="hidden" onchange="sendF(this, 'audio')"></label>
+        <div id="bottom-bar">
+            <div class="input-wrap">
+                <select id="lang" class="bg-transparent text-white text-[10px] mr-2 outline-none">
+                    <option value="en">EN</option><option value="pt">PT</option><option value="ru">RU</option>
+                </select>
+                <input id="msg-input" type="text" placeholder="Envie uma mensagem...">
             </div>
-            <div class="flex justify-center gap-4 text-2xl">
-                <span onclick="addE('❤️')">❤️</span><span onclick="addE('🔥')">🔥</span><span onclick="addE('😘')">😘</span>
-            </div>
-        </div>
-
-        <div id="input-bar">
-            <button onclick="toggleM()" class="text-2xl">➕</button>
-            <div class="input-box">
-                <input id="msg-input" type="text" placeholder="Tradução ativa...">
-            </div>
-            <button onclick="send()" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">➤</button>
+            <button onclick="sendMsg()" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl shadow-lg">➤</button>
         </div>
     </div>
 
     <div id="login">
-        <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-white/10 text-center">
-            <h2 class="text-blue-500 font-black italic text-xl mb-6">BARROS CONNECT</h2>
-            <div id="my-id-label" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-white/10 break-all cursor-pointer" onclick="copyID()">GERANDO ID...</div>
-            <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-white/10 outline-none text-center text-white" placeholder="ID DA AMIGA">
-            <button onclick="startApp()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR</button>
+        <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-zinc-800 text-center">
+            <h2 class="text-blue-500 font-bold text-xl mb-6">BARROS CONNECT</h2>
+            <div id="my-id" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] break-all" onclick="copyID()">GERANDO...</div>
+            <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-zinc-800 text-white text-center" placeholder="ID DO PARCEIRO">
+            <button onclick="connect()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold">CONECTAR</button>
         </div>
     </div>
 
@@ -87,40 +112,33 @@
         let conn, localStream;
 
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
-            localStream = s;
-            document.getElementById('local-video').srcObject = s;
+            localStream = s; document.getElementById('local-video').srcObject = s;
         });
 
-        peer.on('open', id => document.getElementById('my-id-label').innerText = id);
+        peer.on('open', id => document.getElementById('my-id').innerText = id);
 
-        // ESSENCIAL: Ouvir quando ela ligar
         peer.on('call', call => {
             call.answer(localStream);
-            setupStream(call);
+            setupRemoteVideo(call);
         });
 
-        peer.on('connection', c => {
-            conn = c;
-            setupChat();
-        });
+        peer.on('connection', c => { conn = c; setupChat(); });
 
-        function startApp() {
+        function connect() {
             const tid = document.getElementById('target-id').value;
             if(!tid) return;
             const call = peer.call(tid, localStream);
-            setupStream(call);
+            setupRemoteVideo(call);
             conn = peer.connect(tid);
             setupChat();
         }
 
-        function setupStream(call) {
+        function setupRemoteVideo(call) {
             call.on('stream', s => {
                 const rv = document.getElementById('remote-video');
                 rv.srcObject = s;
-                rv.play().catch(() => {
-                    rv.muted = true;
-                    rv.play();
-                });
+                rv.muted = false; // Desmuta após o sinal chegar
+                rv.play();
                 document.getElementById('login').style.display = 'none';
             });
         }
@@ -128,43 +146,31 @@
         function setupChat() {
             document.getElementById('login').style.display = 'none';
             conn.on('data', d => {
-                if(d.type === 'msg') addM(d.orig, d.trans, 'friend', d.file, d.fType);
+                if(d.type === 'msg') addBubble(d.orig, d.trans, false);
             });
         }
 
-        async function send() {
-            const i = document.getElementById('msg-input'), l = document.getElementById('lang-select').value;
+        async function sendMsg() {
+            const i = document.getElementById('msg-input'), l = document.getElementById('lang').value;
             if(!i.value) return;
             const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(i.value)}&langpair=pt|${l}`);
             const j = await res.json();
             const tr = j.responseData.translatedText;
             if(conn) conn.send({type: 'msg', orig: i.value, trans: tr});
-            addM(i.value, tr, 'me');
+            addBubble(i.value, tr, true);
             i.value = '';
         }
 
-        function sendF(input, type) {
-            const r = new FileReader();
-            r.onload = () => {
-                if(conn) conn.send({type:'msg', file: r.result, fType: type, orig: 'Mídia', trans: 'Sent file'});
-                addM('Mídia', 'Sent file', 'me', r.result, type);
-                toggleM();
-            };
-            r.readAsDataURL(input.files[0]);
+        function addBubble(o, t, isMe) {
+            const m = document.getElementById('messages');
+            m.innerHTML += `<div class="bubble ${isMe ? 'bubble-me' : ''}">
+                <p class="text-[10px] opacity-50">${o}</p>
+                <p class="font-semibold">${t}</p>
+            </div>`;
+            m.scrollTop = m.scrollHeight;
         }
 
-        function addM(o, t, s, file, type) {
-            const b = document.getElementById('messages');
-            let content = `<p class="text-[10px] opacity-60">${o}</p><p>${t}</p>`;
-            if(file && type === 'img') content += `<img src="${file}" class="max-w-[150px] rounded-lg mt-2">`;
-            if(file && type === 'audio') content += `<audio src="${file}" controls class="w-full mt-2 filter invert"></audio>`;
-            b.innerHTML += `<div class="msg-bubble ${s==='me'?'msg-me':''}">${content}</div>`;
-            b.scrollTop = b.scrollHeight;
-        }
-
-        function addE(e) { document.getElementById('msg-input').value += e; }
-        function toggleM() { const d = document.getElementById('media-drawer'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
-        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id-label').innerText); alert("Copiado!"); }
+        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("ID Copiado!"); }
     </script>
 </body>
 </html>
