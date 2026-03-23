@@ -3,32 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barros Connect Max</title>
+    <title>Barros Connect Max - Multimídia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Roboto', sans-serif; background: #000; color: #fff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* VÍDEO FIXO NO TOPO */
-        #video-section { height: 35vh; background: #111; position: relative; flex-shrink: 0; border-bottom: 2px solid #333; }
-        video { background: #000; }
-        #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { position: absolute; top: 10px; right: 10px; width: 70px; height: 100px; border-radius: 12px; object-fit: cover; border: 2px solid #3b82f6; transform: scaleX(-1); z-index: 50; }
+        /* VÍDEO FIXO (30% da tela) */
+        #video-section { height: 30vh; background: #111; position: relative; flex-shrink: 0; border-bottom: 2px solid #333; }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        #local-video { position: absolute; top: 10px; right: 10px; width: 65px; height: 90px; border-radius: 12px; object-fit: cover; border: 2px solid #3b82f6; transform: scaleX(-1); z-index: 50; }
 
-        /* CHAT NO MEIO */
+        /* CHAT E MULTIMÍDIA (70% da tela) */
         #chat-section { flex: 1; display: flex; flex-direction: column; background: #0a0a0a; overflow: hidden; position: relative; }
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; }
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 85px; }
 
-        /* INPUT NO RODAPÉ */
-        #input-bar { position: absolute; bottom: 0; width: 100%; background: #1a1a1a; padding: 12px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #333; z-index: 100; }
-        #msg-input { flex: 1; background: #2a2a2a; border-radius: 25px; padding: 10px 15px; color: #fff; border: none; outline: none; font-size: 16px; }
+        /* BALÕES */
+        .msg-row { display: flex; gap: 8px; max-width: 85%; }
+        .msg-me { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-box { padding: 10px; border-radius: 18px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .msg-me .msg-box { background: #005c4b; border-bottom-right-radius: 2px; }
+        .msg-friend .msg-box { background: #202c33; border-bottom-left-radius: 2px; }
+        .msg-photo-p { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; align-self: flex-end; border: 1px solid #444; }
 
-        .msg-box { padding: 8px 14px; border-radius: 18px; max-width: 85%; }
-        .msg-me { align-self: flex-end; background: #005c4b; border-bottom-right-radius: 2px; }
-        .msg-friend { align-self: flex-start; background: #202c33; border-bottom-left-radius: 2px; }
-        
-        #login { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        /* BARRA DE ENTRADA (Sempre visível) */
+        #input-bar { position: absolute; bottom: 0; width: 100%; background: #1a1a1a; padding: 12px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #333; z-index: 100; height: 75px; }
+        #msg-input { flex: 1; background: #2a2a2a; border-radius: 25px; padding: 10px 15px; color: #fff; border: none; outline: none; font-size: 15px; }
+
+        /* GAVETAS */
+        .drawer { position: absolute; bottom: 80px; left: 10px; right: 10px; background: #1a1a1a; border: 1px solid #333; border-radius: 25px; padding: 15px; z-index: 150; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
+        .audio-play { width: 100%; height: 35px; filter: invert(1); margin-top: 5px; }
+        .chat-img { max-width: 100%; border-radius: 12px; margin-bottom: 5px; }
+
+        #login { position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; items-center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body>
@@ -39,118 +47,168 @@
     </section>
 
     <main id="chat-section">
-        <div class="p-2 border-b border-zinc-900 bg-zinc-900/50 flex justify-between text-[10px] font-bold text-blue-500">
-            <span id="conn-status">CONECTANDO...</span>
-            <span id="typing" class="hidden animate-pulse">DIGITANDO...</span>
+        <div class="p-2 border-b border-zinc-900 bg-zinc-900/50 flex justify-between items-center h-10">
+            <select id="lang-select" class="bg-transparent text-[10px] font-bold text-blue-400 outline-none uppercase">
+                <option value="en">INGLÊS</option><option value="es">ESPANHOL</option>
+                <option value="ru">RUSSO</option><option value="uk">UCRANIANO</option>
+                <option value="tl">FILIPINO</option><option value="zh-TW">CHINÊS (T)</option>
+                <option value="pt">PORTUGUÊS (BR)</option>
+            </select>
+            <p id="typing" class="text-[9px] text-blue-500 hidden animate-pulse font-bold uppercase">Digitando...</p>
         </div>
+
         <div id="messages"></div>
 
+        <div id="extra-drawer" class="drawer hidden">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <button onclick="sendWink('kiss')" class="bg-zinc-800 p-3 rounded-xl text-[10px] font-bold">💋 BEIJO</button>
+                <button onclick="sendWink('heart')" class="bg-zinc-800 p-3 rounded-xl text-[10px] font-bold">❤️ CORAÇÃO</button>
+            </div>
+            <div id="emoji-list" class="flex flex-wrap gap-2 text-2xl justify-center"></div>
+        </div>
+
         <div id="input-bar">
-            <button onclick="sendWink()" class="text-2xl">💋</button>
-            <input id="msg-input" type="text" placeholder="Mensagem..." oninput="notifyTyping()">
-            <button onclick="sendMsg()" class="bg-blue-600 w-11 h-11 rounded-full flex items-center justify-center font-bold">➤</button>
+            <button onclick="toggleDrawer()" class="text-2xl">😊</button>
+            <label class="text-2xl cursor-pointer">📎<input type="file" id="img-in" class="hidden" accept="image/*" onchange="sendImage(this)"></label>
+            <input id="msg-input" type="text" placeholder="Mensagem..." oninput="isTyping()">
+            <button id="mic-btn" onmousedown="startV()" onmouseup="stopV()" ontouchstart="startV()" ontouchend="stopV()" class="text-2xl text-red-500">🎙️</button>
+            <button onclick="sendMsg()" class="bg-blue-600 w-11 h-11 rounded-full flex items-center justify-center shadow-lg">➤</button>
         </div>
     </main>
 
     <div id="login">
         <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-zinc-800 text-center">
-            <h1 class="text-blue-500 font-black text-xl mb-4 tracking-tighter">BARROS CONNECT MAX</h1>
-            <div id="my-id" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-zinc-800 break-all" onclick="copyID()">CARREGANDO ID...</div>
+            <h1 class="text-blue-500 font-black text-xl mb-4">BARROS CONNECT MAX</h1>
+            <input id="my-name" class="w-full bg-black p-4 rounded-xl mb-3 border border-zinc-800 outline-none text-sm" placeholder="Seu Nome">
+            <input type="file" id="photo-in" class="hidden" onchange="loadMyPhoto(this)">
+            <label for="photo-in" class="block bg-zinc-800 p-3 rounded-xl mb-4 text-[10px] font-bold cursor-pointer border border-zinc-700">ESCOLHER FOTO</label>
+            <div id="my-id-ui" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-zinc-800 break-all cursor-pointer" onclick="copyID()">GERANDO ID...</div>
             <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-zinc-800 outline-none text-center" placeholder="ID DA AMIGA">
-            <button onclick="start()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR AGORA</button>
-            <p class="text-[9px] text-zinc-500 mt-4">Certifique-se que o link começa com HTTPS</p>
+            <button onclick="startApp()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase shadow-lg shadow-blue-900/40">CONECTAR</button>
         </div>
     </div>
 
     <script>
         const peer = new Peer();
-        let conn, localStream;
+        let conn, localStream, myPhoto, myName, mediaRecorder, audioChunks = [], recognition, transcribed = "";
+        const emojis = ["😀","😂","😍","🤔","😢","👍","❤️","🔥","✨","🙏","👋","🤣"];
 
-        // Forçar ativação da câmera
-        async function initCam() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('local-video').srcObject = localStream;
-            } catch (e) {
-                alert("Ative a câmera e o microfone para continuar.");
-            }
-        }
-        initCam();
+        emojis.forEach(e => document.getElementById('emoji-list').innerHTML += `<span onclick="addEmoji('${e}')" class="cursor-pointer">${e}</span>`);
+        function addEmoji(e) { document.getElementById('msg-input').value += e; }
+        function toggleDrawer() { document.getElementById('extra-drawer').classList.toggle('hidden'); }
 
-        peer.on('open', id => document.getElementById('my-id').innerText = id);
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(Speech) { recognition = new Speech(); recognition.lang = 'pt-BR'; recognition.onresult = (e) => transcribed = e.results[0][0].transcript; }
 
-        // Receber Chamada de Vídeo
+        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
+            localStream = s; document.getElementById('local-video').srcObject = s;
+        });
+
+        peer.on('open', id => document.getElementById('my-id-ui').innerText = id);
         peer.on('call', call => {
             call.answer(localStream);
-            handleCall(call);
-        });
-
-        // Receber Conexão de Chat
-        peer.on('connection', c => {
-            conn = c;
-            setupChat();
-        });
-
-        function start() {
-            const tid = document.getElementById('target-id').value;
-            if(!tid) return;
-            
-            // Inicia Vídeo
-            const call = peer.call(tid, localStream);
-            handleCall(call);
-            
-            // Inicia Chat
-            conn = peer.connect(tid);
-            setupChat();
-        }
-
-        function handleCall(call) {
             call.on('stream', s => {
                 const rv = document.getElementById('remote-video');
-                rv.srcObject = s;
-                // Forçar o play em navegadores mobile
-                rv.onloadedmetadata = () => {
-                    rv.play().catch(e => console.error("Erro no play automático:", e));
-                };
+                rv.srcObject = s; rv.play();
                 document.getElementById('login').style.display = 'none';
-                document.getElementById('conn-status').innerText = "VÍDEO CONECTADO";
+            });
+        });
+        peer.on('connection', c => { conn = c; initChat(); });
+
+        function loadMyPhoto(i) { const r = new FileReader(); r.onload = (e) => myPhoto = e.target.result; r.readAsDataURL(i.files[0]); }
+        
+        function startApp() {
+            myName = document.getElementById('my-name').value;
+            const tid = document.getElementById('target-id').value;
+            if(!tid) return;
+            peer.call(tid, localStream).on('stream', s => {
+                const rv = document.getElementById('remote-video');
+                rv.srcObject = s; rv.play();
+            });
+            conn = peer.connect(tid); initChat();
+        }
+
+        function initChat() {
+            document.getElementById('login').style.display = 'none';
+            conn.on('open', () => conn.send({type: 'profile', name: myName, photo: myPhoto}));
+            conn.on('data', d => {
+                if(d.type === 'profile') { localStorage.setItem('f_photo', d.photo); }
+                else if(d.type === 'typing') showTyping();
+                else if(d.type === 'wink') playWink(d.kind);
+                else if(d.type === 'msg') addMessage(d.orig, d.trans, 'friend', d.audio, d.img);
             });
         }
 
-        function setupChat() {
-            document.getElementById('login').style.display = 'none';
-            conn.on('data', d => {
-                if(d.type === 'msg') addMsg(d.orig, d.trans, 'friend');
-                if(d.type === 'typing') {
-                    document.getElementById('typing').classList.remove('hidden');
-                    setTimeout(() => document.getElementById('typing').classList.add('hidden'), 2000);
-                }
-            });
+        function isTyping() { if(conn) conn.send({type: 'typing'}); }
+        function showTyping() {
+            const ui = document.getElementById('typing'); ui.classList.remove('hidden');
+            clearTimeout(window.tT); window.tT = setTimeout(() => ui.classList.add('hidden'), 2000);
         }
 
         async function sendMsg() {
-            const i = document.getElementById('msg-input');
+            const i = document.getElementById('msg-input'), l = document.getElementById('lang-select').value;
             if(!i.value) return;
-            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(i.value)}&langpair=pt|en`);
-            const j = await res.json();
-            const tr = j.responseData.translatedText;
-            if(conn) conn.send({ type: 'msg', orig: i.value, trans: tr });
-            addMsg(i.value, tr, 'me');
-            i.value = '';
+            const tr = await translate(i.value, l);
+            if(conn) conn.send({type: 'msg', orig: i.value, trans: tr});
+            addMessage(i.value, tr, 'me'); i.value = '';
         }
 
-        function addMsg(o, t, s) {
+        async function startV() {
+            transcribed = ""; audioChunks = []; if(recognition) recognition.start();
+            const s = await navigator.mediaDevices.getUserMedia({audio:true});
+            mediaRecorder = new MediaRecorder(s);
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                const b = new Blob(audioChunks, {type:'audio/mp3'});
+                const r = new FileReader();
+                r.onload = async () => {
+                    const l = document.getElementById('lang-select').value;
+                    const tr = await translate(transcribed || "...", l);
+                    if(conn) conn.send({type: 'msg', audio: r.result, orig: transcribed, trans: tr});
+                    addMessage(transcribed, tr, 'me', r.result);
+                };
+                r.readAsDataURL(b);
+            };
+            mediaRecorder.start();
+        }
+        function stopV() { if(recognition) recognition.stop(); if(mediaRecorder) mediaRecorder.stop(); }
+
+        function sendImage(i) {
+            const r = new FileReader(); r.onload = (e) => {
+                if(conn) conn.send({type: 'msg', img: e.target.result});
+                addMessage('', '', 'me', null, e.target.result);
+            }; r.readAsDataURL(i.files[0]);
+        }
+
+        async function translate(t, l) {
+            try {
+                const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(t)}&langpair=pt|${l}`);
+                const j = await r.json(); return j.responseData.translatedText;
+            } catch { return t; }
+        }
+
+        function addMessage(o, t, s, au = null, im = null) {
             const b = document.getElementById('messages');
-            b.innerHTML += `<div class="msg-box ${s==='me'?'msg-me':'msg-friend'} shadow-lg">
-                <p class="text-[9px] opacity-40 italic">${o}</p>
-                <p class="font-bold text-sm">${t}</p>
+            const isMe = s === 'me';
+            const ph = isMe ? myPhoto : localStorage.getItem('f_photo');
+            let h = "";
+            if(im) h += `<img src="${im}" class="chat-img">`;
+            if(au) h += `<audio src="${au}" controls class="audio-play"></audio>`;
+            if(t) h += `<p class="font-bold text-sm">${t}</p><p class="text-[9px] opacity-40 italic mt-1">${o}</p>`;
+            
+            b.innerHTML += `<div class="msg-row ${isMe?'msg-me':'msg-friend'}">
+                <img src="${ph || ''}" class="msg-photo-p">
+                <div class="msg-box">${h}</div>
             </div>`;
             b.scrollTop = b.scrollHeight;
         }
 
-        function notifyTyping() { if(conn) conn.send({ type: 'typing' }); }
-        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("ID Copiado!"); }
-        function sendWink() { if(conn) conn.send({ type: 'msg', orig: '💋', trans: 'MANDOU UM BEIJO!' }); addMsg('💋', 'MANDOU UM BEIJO!', 'me'); }
+        function playWink(k) {
+            new Audio(k === 'kiss' ? "https://www.myinstants.com/media/sounds/kiss-sound-effect.mp3" : "https://www.myinstants.com/media/sounds/heart-beat-sound-effect.mp3").play();
+            alert(k === 'kiss' ? "💋 BEIJO ENVIADO!" : "❤️ CORAÇÃO ENVIADO!");
+        }
+
+        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id-ui').innerText); alert("Copiado!"); }
     </script>
 </body>
 </html>
