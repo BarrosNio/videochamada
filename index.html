@@ -3,41 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barros Connect - Anti-Sumiço</title>
+    <title>Barros Connect - Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+        body { font-family: 'Roboto', sans-serif; background: #000; color: #fff; height: 100vh; margin: 0; overflow: hidden; display: flex; flex-direction: column; }
         
-        body { font-family: 'Roboto', sans-serif; background: #000; color: #fff; height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* VÍDEO FIXO (25% da tela) */
-        #video-section { height: 25vh; background: #111; position: relative; flex-shrink: 0; border-bottom: 2px solid #333; }
-        #remote-video { width: 100%; height: 100%; object-fit: cover; }
+        /* ÁREA DE VÍDEO FIXA (Não muda de tamanho) */
+        #video-section { height: 200px; background: #111; position: relative; flex-shrink: 0; border-bottom: 2px solid #333; width: 100%; }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; background: #000; }
         #local-video { position: absolute; top: 10px; right: 10px; width: 60px; height: 80px; border-radius: 10px; object-fit: cover; border: 2px solid #3b82f6; transform: scaleX(-1); z-index: 60; }
 
-        /* ÁREA DE CHAT (75% da tela) */
-        #chat-section { flex: 1; display: flex; flex-direction: column; position: relative; background: #0a0a0a; overflow: hidden; }
-        
-        /* O SEGREDO: Mensagens ficam num container com scroll próprio */
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 90px; }
+        /* ÁREA DE CHAT FLEXÍVEL */
+        #chat-section { flex: 1; position: relative; display: flex; flex-direction: column; background: #0a0a0a; overflow: hidden; }
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 70px; }
 
-        /* BARRA DE DIGITAÇÃO FIXA */
-        #input-bar { position: absolute; bottom: 0; width: 100%; background: #1a1a1a; padding: 12px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #333; z-index: 100; }
+        /* INPUT FIXO NO RODAPÉ */
+        #input-bar { position: absolute; bottom: 0; width: 100%; background: #1a1a1a; padding: 10px; display: flex; align-items: center; gap: 8px; border-top: 1px solid #333; z-index: 100; }
         #msg-input { flex: 1; background: #2a2a2a; border-radius: 20px; padding: 10px 15px; color: #fff; border: none; font-size: 14px; outline: none; }
 
-        .msg-box { padding: 10px 14px; border-radius: 18px; max-width: 80%; word-wrap: break-word; }
-        .msg-me { align-self: flex-end; background: #005c4b; border-bottom-right-radius: 2px; }
-        .msg-friend { align-self: flex-start; background: #202c33; border-bottom-left-radius: 2px; }
+        .msg-box { padding: 10px 14px; border-radius: 18px; max-width: 80%; word-wrap: break-word; font-size: 14px; }
+        .msg-me { align-self: flex-end; background: #005c4b; }
+        .msg-friend { align-self: flex-start; background: #202c33; }
 
-        #wink-layer { position: fixed; inset: 0; z-index: 500; display: none; align-items: center; justify-content: center; pointer-events: none; }
-        .wink-anim { width: 60%; animation: pop 3s forwards; }
-        @keyframes pop { 0% { transform: scale(0); } 20% { transform: scale(1.1); } 100% { transform: scale(1.3); opacity: 0; } }
+        #login { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; items-center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body>
-
-    <div id="wink-layer"><img id="wink-img" src="" class="wink-anim"></div>
 
     <section id="video-section">
         <video id="remote-video" autoplay playsinline></video>
@@ -45,28 +37,28 @@
     </section>
 
     <main id="chat-section">
-        <div class="p-2 border-b border-zinc-900 flex justify-between items-center bg-zinc-900/30">
-            <select id="lang-select" class="bg-transparent text-[10px] font-bold text-blue-400 outline-none uppercase">
-                <option value="pt">PORTUGUÊS</option><option value="en" selected>INGLÊS</option>
-                <option value="es">ESPANHOL</option><option value="ru">RUSSO</option>
+        <div class="p-2 border-b border-zinc-900 bg-zinc-900/30 flex justify-between">
+            <select id="lang-select" class="bg-transparent text-[10px] font-bold text-blue-400 outline-none">
+                <option value="en">INGLÊS</option>
+                <option value="es">ESPANHOL</option>
+                <option value="pt">PORTUGUÊS</option>
             </select>
             <p id="typing-ui" class="text-[9px] text-blue-500 hidden animate-pulse font-bold">DIGITANDO...</p>
         </div>
 
-        <div id="messages">
-            </div>
+        <div id="messages"></div>
 
         <div id="input-bar">
-            <button onclick="sendWink('kiss')" class="text-xl">💋</button>
-            <input id="msg-input" type="text" placeholder="Escreva..." oninput="isTyping()">
+            <button onclick="sendWink()" class="text-xl">💋</button>
+            <input id="msg-input" type="text" placeholder="Mensagem..." oninput="isTyping()">
             <button onclick="sendMsg()" class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center">➤</button>
         </div>
     </main>
 
-    <div id="login" class="fixed inset-0 bg-black z-[1000] flex items-center justify-center p-6">
+    <div id="login">
         <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-zinc-800 text-center">
-            <h2 class="text-blue-500 font-black italic text-xl mb-6">BARROS CONNECT</h2>
-            <div id="my-id" class="bg-black p-3 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-zinc-800 cursor-pointer" onclick="copyID()">GERANDO ID...</div>
+            <h2 class="text-blue-500 font-black italic text-xl mb-6 uppercase tracking-tighter">Barros Connect</h2>
+            <div id="my-id" class="bg-black p-3 rounded-xl mb-4 text-blue-400 font-mono text-[10px] border border-zinc-800" onclick="copyID()">GERANDO ID...</div>
             <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 border border-zinc-800 outline-none text-center" placeholder="ID DA AMIGA">
             <button onclick="start()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR</button>
         </div>
@@ -76,76 +68,83 @@
         const peer = new Peer();
         let conn, localStream;
 
+        // Tenta pegar a câmera imediatamente
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
-            localStream = s; document.getElementById('local-video').srcObject = s;
-        });
+            localStream = s;
+            document.getElementById('local-video').srcObject = s;
+        }).catch(err => alert("Por favor, ative a câmera e microfone!"));
 
         peer.on('open', id => document.getElementById('my-id').innerText = id);
+
+        // Quando alguém te liga
         peer.on('call', call => {
             call.answer(localStream);
-            call.on('stream', s => document.getElementById('remote-video').srcObject = s);
+            call.on('stream', s => {
+                const remoteVid = document.getElementById('remote-video');
+                remoteVid.srcObject = s;
+                remoteVid.play();
+                document.getElementById('login').style.display = 'none';
+            });
+        });
+
+        // Quando alguém conecta no chat
+        peer.on('connection', c => {
+            conn = c;
+            initChat();
             document.getElementById('login').style.display = 'none';
         });
-        peer.on('connection', c => { conn = c; initChat(); });
 
         function start() {
             const tid = document.getElementById('target-id').value;
             if(!tid) return;
-            peer.call(tid, localStream).on('stream', s => document.getElementById('remote-video').srcObject = s);
-            conn = peer.connect(tid); initChat();
+
+            // Liga o vídeo
+            const call = peer.call(tid, localStream);
+            call.on('stream', s => {
+                const remoteVid = document.getElementById('remote-video');
+                remoteVid.srcObject = s;
+                remoteVid.play();
+            });
+
+            // Liga o chat
+            conn = peer.connect(tid);
+            initChat();
+            document.getElementById('login').style.display = 'none';
         }
 
         function initChat() {
-            document.getElementById('login').style.display = 'none';
             conn.on('data', d => {
                 if(d.type === 'msg') addMsg(d.orig, d.trans, 'friend');
-                if(d.type === 'wink') playWink(d.kind);
-                if(d.type === 'typing') showTyping();
+                if(d.type === 'typing') {
+                    document.getElementById('typing-ui').classList.remove('hidden');
+                    setTimeout(() => document.getElementById('typing-ui').classList.add('hidden'), 2000);
+                }
             });
-        }
-
-        function isTyping() { if(conn) conn.send({type: 'typing'}); }
-        function showTyping() {
-            const ui = document.getElementById('typing-ui'); ui.classList.remove('hidden');
-            clearTimeout(window.tT); window.tT = setTimeout(() => ui.classList.add('hidden'), 2000);
         }
 
         async function sendMsg() {
             const i = document.getElementById('msg-input');
             const l = document.getElementById('lang-select').value;
             if(!i.value) return;
-            const tr = await translate(i.value, l);
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(i.value)}&langpair=pt|${l}`);
+            const j = await res.json();
+            const tr = j.responseData.translatedText;
             if(conn) conn.send({type: 'msg', orig: i.value, trans: tr});
-            addMsg(i.value, tr, 'me'); i.value = '';
+            addMsg(i.value, tr, 'me');
+            i.value = '';
         }
 
-        async function translate(t, l) {
-            try {
-                const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(t)}&langpair=pt|${l}`);
-                const j = await r.json(); return j.responseData.translatedText;
-            } catch { return t; }
-        }
-
-        function addMsg(orig, trans, sender) {
+        function addMsg(o, t, s) {
             const b = document.getElementById('messages');
-            b.innerHTML += `<div class="msg-box ${sender === 'me' ? 'msg-me' : 'msg-friend'} shadow-md">
-                <p class="text-[9px] opacity-40 italic">${orig}</p>
-                <p class="text-sm font-bold">${trans}</p>
+            b.innerHTML += `<div class="msg-box ${s === 'me' ? 'msg-me' : 'msg-friend'} shadow-md">
+                <p class="text-[9px] opacity-40 italic">${o}</p>
+                <p class="font-bold">${t}</p>
             </div>`;
-            // Força o scroll para o final sempre que uma mensagem entra
-            setTimeout(() => { b.scrollTop = b.scrollHeight; }, 100);
+            b.scrollTop = b.scrollHeight;
         }
 
-        function sendWink(k) { if(conn) conn.send({type: 'wink', kind: k}); playWink(k); }
-        function playWink(k) {
-            const img = document.getElementById('wink-img');
-            img.src = "https://media.giphy.com/media/3o7TKLv3fDYLxH8hW0/giphy.gif";
-            document.getElementById('wink-layer').style.display = 'flex';
-            new Audio("https://www.myinstants.com/media/sounds/kiss-sound-effect.mp3").play();
-            setTimeout(() => document.getElementById('wink-layer').style.display = 'none', 3000);
-        }
-
-        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("ID Copiado!"); }
+        function isTyping() { if(conn) conn.send({type: 'typing'}); }
+        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("Copiado!"); }
     </script>
 </body>
 </html>
