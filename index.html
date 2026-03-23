@@ -3,84 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Barros Connect - Music Edition</title>
+    <title>Barros Connect - Final</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        body, html { height: 100vh; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
 
-        /* VÍDEO (CONFIGURAÇÃO MANTIDA) */
+        /* VÍDEO FUNDO */
         #remote-video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; background: #000; }
-        #local-video { position: fixed; top: 20px; right: 20px; width: 85px; height: 120px; border-radius: 15px; object-fit: cover; border: 2px solid rgba(255,255,255,0.4); z-index: 100; transform: scaleX(-1); }
+        #local-video { position: fixed; top: 15px; right: 15px; width: 80px; height: 110px; border-radius: 12px; object-fit: cover; border: 2px solid #3b82f6; z-index: 100; transform: scaleX(-1); }
 
-        /* INTERFACE */
-        #ui-layer { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: flex-end; pointer-events: none; }
-        #messages { padding: 20px; display: flex; flex-direction: column; gap: 8px; max-height: 40%; overflow-y: auto; pointer-events: auto; }
-        .bubble { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); padding: 10px 14px; border-radius: 18px; color: white; max-width: 85%; align-self: flex-start; border: 1px solid rgba(255,255,255,0.1); }
-        .bubble-me { align-self: flex-end; background: rgba(30, 64, 175, 0.7); }
+        /* CAMADA DO CHAT (Sempre por cima) */
+        #ui-container { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; pointer-events: none; }
+        
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; padding-bottom: 100px; justify-content: flex-end; }
+        
+        .bubble { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); padding: 10px 15px; border-radius: 20px; max-width: 85%; border: 1px solid rgba(255,255,255,0.1); }
+        .bubble-me { align-self: flex-end; background: rgba(30, 64, 175, 0.8); }
 
         /* BARRA DE COMANDO */
-        #command-bar { padding: 12px; display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,0.8); pointer-events: auto; }
-        .input-wrap { flex: 1; background: rgba(255,255,255,0.15); border-radius: 30px; display: flex; align-items: center; padding: 5px 12px; border: 1px solid rgba(255,255,255,0.2); }
-        #msg-in { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 15px; }
+        #input-area { background: rgba(15, 15, 15, 0.95); padding: 12px; display: flex; align-items: center; gap: 8px; pointer-events: auto; z-index: 110; border-top: 1px solid #333; }
+        .input-wrap { flex: 1; background: #2a2a2a; border-radius: 25px; padding: 5px 15px; display: flex; align-items: center; }
+        #msg-in { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 16px; }
 
-        /* WINKS GIGANTES */
-        #wink-screen { position: fixed; inset: 0; z-index: 500; display: none; align-items: center; justify-content: center; pointer-events: none; }
-        .wink-img { width: 75%; animation: pop 3s forwards; }
-        @keyframes pop { 0% { transform: scale(0); opacity: 0; } 20% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
-
-        /* GAVETAS */
-        #emoji-box { position: absolute; bottom: 85px; left: 10px; right: 10px; background: rgba(15,15,15,0.98); border-radius: 25px; padding: 15px; display: none; z-index: 110; border: 1px solid #333; max-height: 250px; overflow-y: auto; }
-        #login { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+        /* WINKS */
+        #wink-layer { position: fixed; inset: 0; z-index: 500; display: none; align-items: center; justify-content: center; pointer-events: none; }
+        
+        /* LOGIN */
+        #login { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; items-center; justify-content: center; p: 20px; pointer-events: auto; }
     </style>
 </head>
 <body>
 
-    <div id="wink-screen"><img id="wink-asset" src="" class="wink-img"></div>
-    <video id="remote-video" autoplay playsinline></video>
+    <video id="remote-video" autoplay playsinline muted></video>
     <video id="local-video" autoplay muted playsinline></video>
 
-    <div id="ui-layer">
+    <div id="ui-container">
         <div class="p-4 pointer-events-auto">
-            <select id="lang-select" class="bg-black/80 text-white text-[10px] p-2 rounded-full border border-white/20 outline-none font-bold">
-                <option value="en">INGLÊS</option>
+            <select id="lang" class="bg-black/80 text-white text-[10px] p-2 rounded-lg border border-white/20">
+                <option value="en" selected>INGLÊS</option>
+                <option value="pt">PORTUGUÊS</option>
                 <option value="es">ESPANHOL</option>
                 <option value="ru">RUSSO</option>
-                <option value="tl">FILIPINO</option>
-                <option value="zh-TW">CHINÊS (TRAD)</option>
-                <option value="uk">UCRANIANO</option>
-                <option value="pt" selected>PORTUGUÊS</option>
             </select>
         </div>
 
         <div id="messages"></div>
 
-        <div id="emoji-box">
-            <div class="grid grid-cols-2 gap-2 mb-4">
-                <button onclick="sendWink('kiss')" class="bg-blue-600 p-2 rounded-lg text-[10px] font-bold text-white">💋 BEIJO (MSN)</button>
-                <button onclick="sendWink('heart')" class="bg-red-600 p-2 rounded-lg text-[10px] font-bold text-white">❤️ CORAÇÃO</button>
-            </div>
-            <div id="emoji-list" class="flex flex-wrap gap-2 text-2xl justify-center"></div>
-        </div>
-
-        <div id="command-bar">
-            <button onclick="toggleEmojis()" class="text-2xl">😊</button>
-            <label class="text-2xl cursor-pointer">📎<input type="file" class="hidden" accept="image/*" onchange="sendFile(this, 'img')"></label>
-            <label class="text-2xl cursor-pointer">🎵<input type="file" class="hidden" accept="audio/*" onchange="sendFile(this, 'music')"></label>
+        <div id="input-area">
+            <button onclick="sendWink()" class="text-2xl">💋</button>
+            <label class="text-2xl cursor-pointer">📎<input type="file" class="hidden" accept="image/*" onchange="up('img', this)"></label>
+            <label class="text-2xl cursor-pointer">🎵<input type="file" class="hidden" accept="audio/*" onchange="up('mus', this)"></label>
             <div class="input-wrap">
-                <input id="msg-in" type="text" placeholder="Escreva...">
+                <input id="msg-in" type="text" placeholder="Diga algo...">
             </div>
-            <button onclick="send()" class="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center text-white shadow-xl">➤</button>
+            <button onclick="sendMsg()" class="bg-blue-600 w-11 h-11 rounded-full flex items-center justify-center font-bold">➤</button>
         </div>
     </div>
 
+    <div id="wink-layer"><img id="wink-img" class="w-3/4"></div>
+
     <div id="login">
-        <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs border border-zinc-800 text-center shadow-2xl">
-            <h1 class="text-blue-500 font-bold text-xl mb-6 italic uppercase">Barros Connect Music</h1>
-            <div id="my-id-ui" class="bg-black p-4 rounded-xl mb-6 text-blue-400 font-mono text-[10px] border border-zinc-800 break-all cursor-pointer" onclick="copyID()">GERANDO ID...</div>
-            <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-6 border border-zinc-800 text-white text-center outline-none" placeholder="ID DA AMIGA">
-            <button onclick="startApp()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR</button>
+        <div class="bg-zinc-900 p-8 rounded-[40px] w-full max-w-xs text-center border border-zinc-800">
+            <h1 class="text-blue-500 font-bold text-xl mb-4">BARROS CONNECT</h1>
+            <div id="my-id" class="bg-black p-4 rounded-xl mb-4 text-blue-400 font-mono text-[10px] break-all border border-zinc-800 cursor-pointer" onclick="copy()">GERANDO ID...</div>
+            <input id="target-id" class="w-full bg-black p-4 rounded-xl mb-4 text-white text-center border border-zinc-800 outline-none" placeholder="ID DA AMIGA">
+            <button onclick="start()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold uppercase">CONECTAR</button>
         </div>
     </div>
 
@@ -88,95 +77,81 @@
         const peer = new Peer({ config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}});
         let conn, localStream;
 
-        const emojis = ["😀","😂","😍","🤔","👍","❤️","🔥","✨","🙏","👋","🤣","😘","💕","😎","🙌","🎉","👏","😢","😭"];
-        emojis.forEach(e => document.getElementById('emoji-list').innerHTML += `<span onclick="addEmoji('${e}')" class="cursor-pointer">${e}</span>`);
-        
-        function addEmoji(e) { document.getElementById('msg-in').value += e; }
-        function toggleEmojis() { const d = document.getElementById('emoji-box'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
-
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(s => {
             localStream = s; document.getElementById('local-video').srcObject = s;
         });
 
-        peer.on('open', id => document.getElementById('my-id-ui').innerText = id);
+        peer.on('open', id => document.getElementById('my-id').innerText = id);
+
         peer.on('call', call => {
             call.answer(localStream);
             call.on('stream', s => { 
-                document.getElementById('remote-video').srcObject = s;
-                document.getElementById('login').style.display = 'none'; 
+                const rv = document.getElementById('remote-video');
+                rv.srcObject = s; rv.muted = false; rv.play();
+                document.getElementById('login').style.display = 'none';
             });
         });
-        peer.on('connection', c => { conn = c; setupConn(); });
 
-        function startApp() {
+        peer.on('connection', c => { conn = c; setup(); });
+
+        function start() {
             const tid = document.getElementById('target-id').value;
             if(!tid) return;
-            const call = peer.call(tid, localStream);
-            call.on('stream', s => { 
-                document.getElementById('remote-video').srcObject = s;
-                document.getElementById('login').style.display = 'none'; 
+            peer.call(tid, localStream).on('stream', s => {
+                const rv = document.getElementById('remote-video');
+                rv.srcObject = s; rv.muted = false; rv.play();
             });
-            conn = peer.connect(tid); setupConn();
+            conn = peer.connect(tid); setup();
         }
 
-        function setupConn() {
+        function setup() {
             document.getElementById('login').style.display = 'none';
             conn.on('data', d => {
-                if(d.type === 'msg') addBubble(d.orig, d.trans, false, d.img, d.music);
-                if(d.type === 'wink') playWink(d.kind);
+                if(d.type === 'wink') playWink();
+                else addBubble(d.orig, d.trans, false, d.img, d.mus);
             });
         }
 
-        async function send() {
-            const i = document.getElementById('msg-in'), l = document.getElementById('lang-select').value;
+        async function sendMsg() {
+            const i = document.getElementById('msg-in'), l = document.getElementById('lang').value;
             if(!i.value || !conn) return;
-            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(i.value)}&langpair=pt|${l}`);
-            const j = await res.json();
+            const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(i.value)}&langpair=pt|${l}`);
+            const j = await r.json();
             const tr = j.responseData.translatedText;
-            conn.send({type: 'msg', orig: i.value, trans: tr});
+            conn.send({orig: i.value, trans: tr});
             addBubble(i.value, tr, true);
             i.value = '';
-            document.getElementById('emoji-box').style.display = 'none';
         }
 
-        function sendFile(input, type) {
+        function up(type, input) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const data = {type: 'msg'};
-                if(type === 'img') data.img = e.target.result;
-                if(type === 'music') data.music = e.target.result;
-                if(conn) conn.send(data);
-                addBubble('', '', true, data.img, data.music);
+                const data = {img: type==='img'?e.target.result:null, mus: type==='mus'?e.target.result:null};
+                conn.send(data); addBubble('', '', true, data.img, data.mus);
             };
             reader.readAsDataURL(input.files[0]);
         }
 
-        function sendWink(kind) {
-            if(conn) conn.send({type: 'wink', kind: kind});
-            playWink(kind);
-            document.getElementById('emoji-box').style.display = 'none';
+        function addBubble(o, t, me, img, mus) {
+            const box = document.getElementById('messages');
+            let h = "";
+            if(img) h += `<img src="${img}" class="rounded-lg max-w-full">`;
+            if(mus) h += `<audio src="${mus}" controls class="w-full filter invert h-8"></audio>`;
+            if(t) h += `<p class="text-[9px] opacity-50">${o}</p><p class="text-sm font-bold">${t}</p>`;
+            box.innerHTML += `<div class="bubble ${me?'bubble-me':''}">${h}</div>`;
+            box.scrollTop = box.scrollHeight;
         }
 
-        function playWink(k) {
-            const img = document.getElementById('wink-asset');
-            const screen = document.getElementById('wink-screen');
-            img.src = k === 'kiss' ? "https://media.giphy.com/media/3o7TKLv3fDYLxH8hW0/giphy.gif" : "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHR0OHI1Znd6bmZ6Znd6bmZ6Znd6bmZ6Znd6bmZ6Znd6bmZ6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1z/v0OOn2Z7906V5S63v2/giphy.gif";
-            screen.style.display = 'flex';
-            new Audio(k === 'kiss' ? "https://www.myinstants.com/media/sounds/kiss-sound-effect.mp3" : "https://www.myinstants.com/media/sounds/heart-beat-sound-effect.mp3").play();
-            setTimeout(() => screen.style.display = 'none', 3000);
+        function sendWink() { if(conn) conn.send({type:'wink'}); playWink(); }
+        function playWink() {
+            const l = document.getElementById('wink-layer');
+            document.getElementById('wink-img').src = "https://media.giphy.com/media/3o7TKLv3fDYLxH8hW0/giphy.gif";
+            l.style.display = 'flex';
+            new Audio("https://www.myinstants.com/media/sounds/kiss-sound-effect.mp3").play();
+            setTimeout(() => l.style.display = 'none', 3000);
         }
 
-        function addBubble(o, t, isMe, img = null, music = null) {
-            const m = document.getElementById('messages');
-            let content = "";
-            if(img) content += `<img src="${img}" class="rounded-xl max-w-full">`;
-            if(music) content += `<div class="bg-black/40 p-2 rounded-lg">🎵 Música Partilhada:<audio src="${music}" controls class="w-full h-8 mt-1 filter invert"></audio></div>`;
-            if(t) content += `<p class="text-[9px] opacity-60 italic">${o}</p><p class="font-bold">${t}</p>`;
-            m.innerHTML += `<div class="bubble ${isMe?'bubble-me':''}">${content}</div>`;
-            m.scrollTop = m.scrollHeight;
-        }
-
-        function copyID() { navigator.clipboard.writeText(document.getElementById('my-id-ui').innerText); alert("ID Copiado!"); }
+        function copy() { navigator.clipboard.writeText(document.getElementById('my-id').innerText); alert("Copiado!"); }
     </script>
 </body>
 </html>
