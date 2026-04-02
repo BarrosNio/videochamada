@@ -265,7 +265,8 @@
 
 
     <script>
-        const socket = typeof io !== 'undefined' ? io(window.location.origin) : null;
+      const renderUrl = window.location.origin;
+
         
         let localStream = null;
         let peer;
