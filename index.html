@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Premium Video Connect</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <!-- Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #07070a;
+            --font-main: 'Outfit', sans-serif;
+            --safe-bottom: env(safe-area-inset-bottom, 15px);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body, html {
+            height: 100dvh; width: 100vw; overflow: hidden;
+            font-family: var(--font-main); background: var(--bg-dark); color: #ffffff;
+            position: relative;
+        }
+
+        p, span, h1, h2, h3, div {
+            word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;
+        }
+
+        .ambient-glow {
+            position: absolute; width: 50vw; height: 50vw; top: -10%; left: -10%;
+            background: radial-gradient(circle, rgba(76,29,149,0.15) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0; pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .premium-input {
+            width: 100%; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff; padding: 16px 20px; border-radius: 16px; font-size: 16px; outline: none;
+        }
+        .premium-input:focus { border-color: rgba(99, 102, 241, 0.8); background: rgba(0, 0, 0, 0.4); }
+
+        .premium-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+            color: white; font-weight: 600; padding: 16px; border-radius: 16px; 
+            width: 100%; border: none; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+        }
+        .premium-btn-alt {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; font-weight: 600; padding: 16px; border-radius: 16px; 
+            width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+        }
+
+        .app-screen {
+            display: none; position: absolute; inset: 0; width: 100%; height: 100dvh;
+            flex-direction: column; z-index: 5;
+        }
+        .app-screen.active { display: flex; }
+
+        .auth-container {
+            width: 90%; max-width: 400px; margin: auto;
+            padding: 40px 24px; text-align: center; z-index: 10;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+
+        .id-box {
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px; padding: 12px; font-family: monospace; font-size: 14px;
+            color: #a5b4fc; display: flex; justify-content: space-between; cursor: pointer; margin-top: 8px;
+        }
+
+        /* Video Area */
+        #screen-call { background: var(--bg-dark); position: relative; justify-content: flex-end; }
+
+        .video-wrapper {
+            position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;
+            display: flex; align-items: center; justify-content: center; background: #000;
+        }
+        #remote-video {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        
+        .video-overlay {
+            position: absolute; inset: 0; z-index: 2; pointer-events: none;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 40%, transparent 100%);
+        }
+
+        .pip-video {
+            position: absolute; top: 20px; right: 20px; 
+            width: 90px; height: 135px; background: #000;
+            border-radius: 16px; overflow: hidden; z-index: 20;
+            border: 2px solid rgba(255,255,255,0.2);
+            transform: scaleX(-1);
+        }
+        .pip-video video { width: 100%; height: 100%; object-fit: cover; }
+
+        .call-header {
+            position: absolute; top: 20px; left: 20px; z-index: 20;
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px;
+        }
+
+        .ui-layer {
+            position: absolute; inset: 0; z-index: 9999; 
+            display: flex; flex-direction: column;
+            pointer-events: none;
+        }
+
+        .chat-scroll-area {
+            flex: 1; overflow-y: auto; pointer-events: auto;
+            padding: 20px 15px; padding-top: 150px; 
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .chat-scroll-area::-webkit-scrollbar { display: none; }
+
+        .chat-bubble {
+            background: rgba(20,20,25,0.7); backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255,255,255,0.1); padding: 12px 16px;
+            border-radius: 20px; border-bottom-left-radius: 4px;
+            color: #fff; max-width: 85%; align-self: flex-start; pointer-events: auto;
+        }
+        .chat-bubble.mine {
+            background: rgba(99, 102, 241, 0.4); border: 1px solid rgba(99, 102, 241, 0.3);
+            border-bottom-left-radius: 20px; border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+
+        .msg-original { font-weight: 600; font-size: 15px; line-height: 1.4; color: #fff;}
+        .msg-translated { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 4px; line-height: 1.3;}
+        .msg-tag { font-size: 9px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-top: 6px; letter-spacing: 1px;}
+
+        .bottom-ui-area {
+            flex-shrink: 0; pointer-events: auto;
+            display: flex; flex-direction: column; gap: 12px;
+            padding: 10px 15px; padding-bottom: var(--safe-bottom);
+        }
+
+        .controls-row { display: flex; justify-content: center; gap: 20px; }
+        .control-btn {
+            width: 48px; height: 48px; border-radius: 50%; border: none;
+            background: rgba(255,255,255,0.15); color: white; font-size: 22px;
+            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+        }
+        .control-btn.btn-end { background: rgba(239, 68, 68, 0.8); }
+
+        .input-row {
+            display: flex; background: rgba(20,20,25,0.9);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
+            padding: 6px 12px; align-items: center; gap: 10px; position: relative;
+        }
+        .input-row input { flex: 1; min-width: 0; background: transparent; border: none; color: #fff; outline: none; }
+        
+        .translate-select {
+            background: transparent; color: #fff; width: 60px; outline: none; border: none; font-size: 12px; font-weight: bold;
+        }
+        .translate-select option { background: #101018; color: #fff;}
+
+        .btn-icon-small { background: transparent; color: rgba(255,255,255,0.7); font-size: 24px; border: none; }
+        .btn-send { background: #6366f1; color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; }
+
+        @media (min-width: 1024px) {
+            .app-screen { align-items: center; justify-content: center; }
+            .auth-container { max-width: 450px; }
+            .video-wrapper { max-width: 1200px; margin: 0 auto; border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); }
+            #remote-video { object-fit: contain; }
+            .ui-layer { max-width: 1200px; margin: 0 auto; left: 0; right: 0; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <!-- INITIAL SCREEN / LOGIN -->
+    <div id="screen-initial" class="app-screen active">
+        <div class="auth-container glass-panel">
+            <h1 class="text-3xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500 pb-1">
+                Conectar Agora
+            </h1>
+
+            <div class="text-left w-full">
+                <label class="text-xs uppercase tracking-wider text-gray-400 font-semibold block ml-1">Seu ID:</label>
+                <div class="id-box" onclick="copyMyID()">
+                    <span id="myId">Gerando...</span>
+                    <ion-icon name="copy-outline"></ion-icon>
+                </div>
+            </div>
+
+            <input type="text" id="nickname" class="premium-input" placeholder="Seu nome">
+            <input type="text" id="room" class="premium-input" placeholder="ID do amigo">
+
+            <!-- ATIVAR CAMERA EXPLICITAMENTE -->
+            <button onclick="start()" class="premium-btn-alt">
+                <ion-icon name="camera-outline"></ion-icon>
+                <span>Ativar Câmera</span>
+            </button>
+
+            <!-- CONECTAR -->
+            <button onclick="connect()" class="premium-btn">
+                <ion-icon name="videocam-outline"></ion-icon>
+                <span>Conectar</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- CALL SCREEN -->
+    <div id="screen-call" class="app-screen">
+        <div class="video-wrapper">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <div class="video-overlay"></div>
+            
+            <div class="pip-video glass-panel p-0 border-0">
+                <video id="localVideo" autoplay muted playsinline></video>
+            </div>
+            
+            <div class="call-header glass-panel">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div class="flex flex-col ml-2">
+                    <span id="remote-nickname" class="text-sm font-bold text-white">Conectado</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui-layer">
+            <div id="messages" class="chat-scroll-area"></div>
+            
+            <div class="bottom-ui-area">
+                <div class="controls-row">
+                    <button class="control-btn" id="btn-mic" onclick="toggleMic()">
+                        <ion-icon name="mic-outline"></ion-icon>
+                    </button>
+                    <button class="control-btn btn-end" onclick="leaveRoom()">
+                        <ion-icon name="call"></ion-icon>
+                    </button>
+                    <button class="control-btn" id="btn-cam" onclick="toggleCam()">
+                        <ion-icon name="videocam-outline"></ion-icon>
+                    </button>
+                </div>
+
+                <div class="input-row z-30">
+                    <select id="lang-select" class="translate-select" title="Auto Translate To">
+                        <option value="en">EN</option>
+                        <option value="pt">PT-BR</option>
+                        <option value="es">ES</option>
+                    </select>
+
+                    <input type="text" id="msg" placeholder="Mensagem..." onkeypress="handleEnter(event)">
+                    <button class="btn-send" onclick="send()"><ion-icon name="send"></ion-icon></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const socket = typeof io !== 'undefined' ? io(window.location.origin) : null;
+        
+        let localStream = null;
+        let peer;
+        let roomId;
+        let nickname = "";
+        
+        // GERAR ID
+        const myId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        document.getElementById("myId").innerText = myId;
+        function copyMyID() { navigator.clipboard.writeText(myId).then(()=>alert("ID Copiado!")); }
+
+        // EXPLICIT CAMERA START
+        async function start() {
+            try {
+                if (!navigator.mediaDevices) {
+                    alert("Navegador não suporta câmera");
+                    return;
+                }
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById("localVideo").srcObject = localStream;
+                alert("✅ Câmera ativada com sucesso");
+            } catch (e) {
+                console.error(e);
+                if (e.name === "NotAllowedError") alert("❌ Permissão negada pelo navegador");
+                else alert("❌ Erro ao acessar câmera");
+            }
+        }
+
+        let hasJoined = false;
+
+        function connect() {
+            roomId = document.getElementById("room").value.trim() || myId;
+            nickname = document.getElementById("nickname").value.trim() || "Anônimo";
+
+            if (!roomId) return alert("Digite o ID do amigo");
+            
+            if (!localStream) {
+                alert("⚠️ Ative a câmera primeiro!");
+                return;
+            }
+
+            if(socket && !hasJoined) {
+                socket.emit("join-room", roomId, nickname);
+                hasJoined = true;
+                
+                // Set up global listeners once
+                setupSignaling();
+            }
+
+            document.getElementById("screen-initial").classList.remove('active');
+            document.getElementById("screen-call").classList.add('active');
+
+            // Initialize our peer connection but DON'T create an offer yet
+            initPeerConnection();
+        }
+
+        // ============================================
+        // WEBRTC SIGNALING (Corrigido para evitar conflitos)
+        // ============================================
+        
+        function initPeerConnection() {
+            if (peer) peer.close(); // Reset if exists
+
+            peer = new RTCPeerConnection({
+                iceServers: [
+                    { urls: "stun:stun.l.google.com:19302" },
+                    { urls: "stun:stun1.l.google.com:19302"}
+                ]
+            });
+
+            localStream.getTracks().forEach(track => {
+                peer.addTrack(track, localStream);
+            });
+
+            peer.ontrack = e => {
+                const remoteVid = document.getElementById("remoteVideo");
+                if (remoteVid.srcObject !== e.streams[0]) {
+                    remoteVid.srcObject = e.streams[0];
+                }
+            };
+
+            peer.onicecandidate = e => {
+                if (e.candidate && socket) {
+                    socket.emit("ice-candidate", roomId, e.candidate);
+                }
+            };
+        }
+
+        function setupSignaling() {
+            if(!socket) return;
+            
+            // Quando alguém ENTRA na sala depois de você, VOCÊ cria a Offer
+            socket.on("user-joined", async (userId, nick) => {
+                document.getElementById('remote-nickname').innerText = nick;
+                // O recém-chegado entrou, vamos convidá-lo com uma offer
+                const offer = await peer.createOffer();
+                await peer.setLocalDescription(offer);
+                socket.emit("offer", roomId, offer);
+            });
+
+            socket.on("offer", async (userId, offer) => {
+                // Se eu acabei de entrar e recebi uma offer do criador da sala
+                // Faço o Answer e envio de volta
+                if(peer.signalingState !== "stable") {
+                    console.log("Ignorando offer conflitante");
+                    return;
+                }
+                await peer.setRemoteDescription(new RTCSessionDescription(offer));
+                const answer = await peer.createAnswer();
+                await peer.setLocalDescription(answer);
+                socket.emit("answer", roomId, answer);
+            });
+
+            socket.on("answer", async (userId, answer) => {
+                // Recebi o answer para a minha offer
+                if(peer.signalingState !== "stable") {
+                    await peer.setRemoteDescription(new RTCSessionDescription(answer));
+                }
+            });
+
+            socket.on("ice-candidate", (userId, candidate) => {
+                if(candidate && peer && peer.remoteDescription) {
+                    peer.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.error(e));
+                }
+            });
+            
+            socket.on("sys-msg", (nick) => {
+                document.getElementById('remote-nickname').innerText = nick;
+            });
+        }
+
+        // ============================================
+        // CHAT E TRADUÇÃO NATIVA
+        // ============================================
+        function handleEnter(e) { if(e.key === 'Enter') send(); }
+
+        async function send() {
+            const msg = document.getElementById("msg").value.trim();
+            if (!msg) return;
+
+            document.getElementById("msg").value = "";
+
+            // Tradução Dinâmica
+            const targetLang = document.getElementById('lang-select').value;
+            let translated = `[${targetLang.toUpperCase()}] ${msg}`; // Backup fallback
+
+            try {
+                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(msg)}&langpair=Autodetect|${targetLang}`);
+                const json = await res.json();
+                if(json.responseData && json.responseData.translatedText) {
+                    translated = json.responseData.translatedText;
+                }
+            } catch(e) { console.warn("Erro tradução"); }
+
+            const data = { name: nickname, msg: msg, translated: translated };
+
+            if(socket) socket.emit("chat-message", roomId, data);
+            addMessage(data, true);
+        }
+
+        if(socket) {
+            socket.on("chat-message", data => {
+                addMessage(data, false);
+            });
+            socket.on('chat-history', history => {
+                history.forEach(data => addMessage(data, false));
+            });
+        }
+
+        function addMessage(data, isMine) {
+            const div = document.createElement("div");
+            div.className = `chat-bubble ${isMine ? 'mine' : ''}`;
+            div.innerHTML = `
+                <div class="text-[9px] uppercase tracking-widest opacity-50 mb-1">${isMine ? 'Você' : data.name}</div>
+                <div class="msg-original">${data.msg}</div>
+                <div class="msg-translated">${data.translated}</div>
+            `;
+            const container = document.getElementById("messages");
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ============================================
+        // CONTROLES DE MIDIA
+        // ============================================
+        let isMicOn = true, isCamOn = true;
+        function toggleMic() {
+            if(!localStream) return;
+            isMicOn = !isMicOn;
+            localStream.getAudioTracks()[0].enabled = isMicOn;
+            const btn = document.getElementById('btn-mic');
+            btn.innerHTML = isMicOn ? '<ion-icon name="mic-outline"></ion-icon>' : '<ion-icon name="mic-off-outline"></ion-icon>';
+            btn.style.background = isMicOn ? 'rgba(255,255,255,0.15)' : 'rgba(239, 68, 68, 0.8)';
+        }
+        function toggleCam() {
+            if(!localStream) return;
+            isCamOn = !isCamOn;
+            localStream.getVideoTracks()[0].enabled = isCamOn;
+            const btn = document.getElementById('btn-cam');
+            btn.innerHTML = isCamOn ? '<ion-icon name="videocam-outline"></ion-icon>' : '<ion-icon name="videocam-off-outline"></ion-icon>';
+            btn.style.background = isCamOn ? 'rgba(255,255,255,0.15)' : 'rgba(239, 68, 68, 0.8)';
+        }
+        function leaveRoom() {
+            if(peer) peer.close();
+            document.getElementById('remoteVideo').srcObject = null;
+            document.getElementById('messages').innerHTML = "";
+            document.getElementById('screen-call').classList.remove('active');
+            document.getElementById('screen-initial').classList.add('active');
+        }
+    </script>
+</body>
+</html>
