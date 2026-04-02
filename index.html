@@ -301,12 +301,14 @@
 
     <script>
         // ==========================================
-        // ATENÇÃO: COLOQUE A URL DO RENDER ABAIXO
+        // CONFIGURAÇÃO AUTOMÁTICA DE SERVIDOR
         // ==========================================
-        // Exemplo: const renderUrl = "https://videochamada-1.onrender.com";
-        const renderUrl = "https://sinalizacao-video-chamada.onrender.com"; // <-- TROQUE ESSA URL PELA SUA DO RENDER SE PRECISAR!
-
-        const socket = typeof io !== 'undefined' && renderUrl ? io(renderUrl) : null;
+        let renderUrl = "https://videochamada-1.onrender.com";
+        if (renderUrl.includes("github.io") || renderUrl.includes("file://")) {
+            // Se acessar pelo GitHub, ele força usar o Render:
+            renderUrl = "https://sinalizacao-video-chamada.onrender.com"; // <-- SEU LINK DO RENDER AQUI SE ESTIVER NO GITHUB
+        }
+        const socket = typeof io !== 'undefined' ? io(renderUrl) : null;
         
         let localStream = null;
         let peer;
@@ -462,6 +464,18 @@
         }
 
         // ============================================
+        // DEBUG DE CONEXÃO
+        // ============================================
+        if (socket) {
+            socket.on("connect", () => {
+                document.getElementById('remote-nickname').innerText = "🟢 Servidor Online (Aguardando amigo)";
+            });
+            socket.on("connect_error", (err) => {
+                document.getElementById('remote-nickname').innerText = "🔴 Erro no servidor!";
+            });
+        }
+
+        // ============================================
         // CHAT, TRANSLATIONS, IMAGES & WINKS
         // ============================================
         function handleEnter(e) { if(e.key === 'Enter') send(); }
@@ -600,3 +614,4 @@
     </script>
 </body>
 </html>
+
