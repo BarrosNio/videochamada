@@ -265,8 +265,10 @@
 
 
     <script>
-      const renderUrl = window.location.origin;
-
+        // NOTE: IMPORTANTE! Mude a variável renderUrl para a sua URL do Render! Ex: "https://video-chat-render-xyz.onrender.com"
+        // Se você também upou o HTML pro Render, window.location.origin já vai funcionar.
+        const renderUrl = window.location.origin;
+        const socket = typeof io !== 'undefined' ? io(renderUrl) : null;
         
         let localStream = null;
         let peer;
@@ -296,6 +298,7 @@
         }
 
         let hasJoined = false;
+        let iceCandidatesQueue = []; // Fila para armazenar candidatos perdidos
 
         function connect() {
             roomId = document.getElementById("room").value.trim() || myId;
@@ -304,7 +307,7 @@
             if (!roomId) return alert("Digite o ID do amigo");
             
             if (!localStream) {
-                alert("⚠️ Ative a câmera primeiro!");
+                alert("⚠️ Câmera não encontrada! Se você está no PC, feche as outras abas que estão usando a câmera. Não esqueça de clicar em 'Ativar Câmera'.");
                 return;
             }
 
@@ -312,23 +315,18 @@
                 socket.emit("join-room", roomId, nickname);
                 hasJoined = true;
                 
-                // Set up global listeners once
                 setupSignaling();
             }
 
             document.getElementById("screen-initial").classList.remove('active');
             document.getElementById("screen-call").classList.add('active');
 
-            // Initialize our peer connection but DON'T create an offer yet
             initPeerConnection();
         }
 
-        // ============================================
-        // WEBRTC SIGNALING (Corrigido para evitar conflitos)
-        // ============================================
-        
         function initPeerConnection() {
-            if (peer) peer.close(); // Reset if exists
+            if (peer) peer.close(); 
+            iceCandidatesQueue = []; // Limpa a fila
 
             peer = new RTCPeerConnection({
                 iceServers: [
@@ -350,7 +348,7 @@
 
             peer.onicecandidate = e => {
                 if (e.candidate && socket) {
-                    socket.emit("ice-candidate", roomId, e.candidate);
+                    socket.emit("ice-candidate", e.candidate);
                 }
             };
         }
@@ -358,38 +356,49 @@
         function setupSignaling() {
             if(!socket) return;
             
-            // Quando alguém ENTRA na sala depois de você, VOCÊ cria a Offer
-            socket.on("user-joined", async (userId, nick) => {
-                document.getElementById('remote-nickname').innerText = nick;
-                // O recém-chegado entrou, vamos convidá-lo com uma offer
+            socket.on("user-joined", async () => {
+                document.getElementById('remote-nickname').innerText = "Amigo conectou";
                 const offer = await peer.createOffer();
                 await peer.setLocalDescription(offer);
-                socket.emit("offer", roomId, offer);
+                socket.emit("offer", offer);
             });
 
-            socket.on("offer", async (userId, offer) => {
-                // Se eu acabei de entrar e recebi uma offer do criador da sala
-                // Faço o Answer e envio de volta
-                if(peer.signalingState !== "stable") {
-                    console.log("Ignorando offer conflitante");
-                    return;
-                }
+            socket.on("offer", async (offer) => {
+                if(peer.signalingState !== "stable") return;
+                
+                document.getElementById('remote-nickname').innerText = "Amigo conectou";
                 await peer.setRemoteDescription(new RTCSessionDescription(offer));
+                
                 const answer = await peer.createAnswer();
                 await peer.setLocalDescription(answer);
-                socket.emit("answer", roomId, answer);
-            });
+                socket.emit("answer", answer);
 
-            socket.on("answer", async (userId, answer) => {
-                // Recebi o answer para a minha offer
-                if(peer.signalingState !== "stable") {
-                    await peer.setRemoteDescription(new RTCSessionDescription(answer));
+                // Drena a fila de candidatos de gelo se carregaram mais rápido que o Offer
+                while(iceCandidatesQueue.length) {
+                    peer.addIceCandidate(iceCandidatesQueue.shift()).catch(e => console.error(e));
                 }
             });
 
-            socket.on("ice-candidate", (userId, candidate) => {
-                if(candidate && peer && peer.remoteDescription) {
-                    peer.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.error(e));
+            socket.on("answer", async (answer) => {
+                if(peer.signalingState !== "stable") {
+                    await peer.setRemoteDescription(new RTCSessionDescription(answer));
+
+                    // Drena a fila de candidatos aqui também
+                    while(iceCandidatesQueue.length) {
+                        peer.addIceCandidate(iceCandidatesQueue.shift()).catch(e => console.error(e));
+                    }
+                }
+            });
+
+            socket.on("ice-candidate", (candidate) => {
+                if(candidate) {
+                    const ice = new RTCIceCandidate(candidate);
+                    if (peer.remoteDescription) {
+                        peer.addIceCandidate(ice).catch(e => console.error(e));
+                    } else {
+                        // Se o ICE chegar ANTES do offer/answer (super comum na nuvem) salvamos na fila!
+                        iceCandidatesQueue.push(ice);
+                    }
                 }
             });
             
@@ -423,7 +432,7 @@
 
             const data = { name: nickname, msg: msg, translated: translated };
 
-            if(socket) socket.emit("chat-message", roomId, data);
+            if(socket) socket.emit("chat-message", data);
             addMessage(data, true);
         }
 
