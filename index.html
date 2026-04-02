@@ -180,11 +180,11 @@
             position: absolute; inset: 0; z-index: 10000; pointer-events: none; 
             display: none; align-items: center; justify-content: center;
         }
-        .wink-item { width: 70vw; max-width: 350px; animation: pop 1.8s ease-out forwards; }
+        .wink-item { font-size: 140px; animation: pop 1.5s ease-out forwards; text-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         @keyframes pop {
-            0% { transform: scale(0.1) rotate(-10deg); opacity: 0; }
-            40% { transform: scale(1.1) rotate(5deg); opacity: 1; }
-            70% { transform: scale(0.95) rotate(0deg); opacity: 1; }
+            0% { transform: scale(0.1) rotate(-15deg); opacity: 0; }
+            40% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+            70% { transform: scale(0.9) rotate(0deg); opacity: 1; }
             100% { transform: scale(1) rotate(0deg); opacity: 0; }
         }
 
@@ -356,26 +356,28 @@
             if (!roomId) return alert("Digite o ID do amigo");
             
             if (!localStream) {
-                alert("⚠️ Câmera não encontrada! Se você está no PC, feche as outras abas que estão usando a câmera. Não esqueça de clicar em 'Ativar Câmera'.");
+                alert("⚠️ Se a câmera sumiu, ela pode estar sendo bloqueada pelo Navegador ou Windows. Feche outras abas e reinicie.");
                 return;
-            }
-
-            if(socket && !hasJoined) {
-                socket.emit("join-room", roomId, nickname);
-                hasJoined = true;
-                
-                setupSignaling();
             }
 
             document.getElementById("screen-initial").classList.remove('active');
             document.getElementById("screen-call").classList.add('active');
 
-            initPeerConnection();
+            if (!peer) {
+                initPeerConnection();
+            }
+
+            if(socket && !hasJoined) {
+                socket.emit("join-room", roomId, nickname);
+                hasJoined = true;
+                setupSignaling();
+            }
         }
 
         function initPeerConnection() {
-            if (peer) peer.close(); 
-            iceCandidatesQueue = []; // Limpa a fila
+            if (peer) return; // Não recriar se o usuário apertar conectar 2x 
+
+            iceCandidatesQueue = [];
 
             peer = new RTCPeerConnection({
                 iceServers: [
@@ -384,9 +386,11 @@
                 ]
             });
 
-            localStream.getTracks().forEach(track => {
-                peer.addTrack(track, localStream);
-            });
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    peer.addTrack(track, localStream);
+                });
+            }
 
             peer.ontrack = e => {
                 const remoteVid = document.getElementById("remoteVideo");
@@ -496,16 +500,16 @@
         function playWink(type) {
             const wOverlay = document.getElementById('wink-overlay');
             wOverlay.innerHTML = '';
-            const img = document.createElement('img');
-            img.className = 'wink-item';
             
-            // Premium Animated Gifs via URL para não sobrecarregar
-            if(type === 'kiss') img.src = "https://media1.giphy.com/media/l41lSXjeosO6M2I12/giphy.gif"; 
-            if(type === 'butt') img.src = "https://media.tenor.com/qL0l013NqE0AAAAC/butt-dance.gif"; 
+            const emoji = document.createElement('div');
+            emoji.className = 'wink-item';
             
-            wOverlay.appendChild(img);
+            if(type === 'kiss') emoji.innerText = '💋';
+            if(type === 'butt') emoji.innerText = '🍑';
+            
+            wOverlay.appendChild(emoji);
             wOverlay.style.display = 'flex';
-            setTimeout(() => { wOverlay.style.display = 'none'; }, 1800);
+            setTimeout(() => { wOverlay.style.display = 'none'; }, 1500);
         }
 
         async function send() {
