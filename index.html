@@ -303,7 +303,7 @@
         // ==========================================
         // CONFIGURAÇÃO AUTOMÁTICA DE SERVIDOR
         // ==========================================
-        let renderUrl = "https://videochamada-1.onrender.com";
+        let renderUrl = window.location.origin;
         if (renderUrl.includes("github.io") || renderUrl.includes("file://")) {
             // Se acessar pelo GitHub, ele força usar o Render:
             renderUrl = "https://sinalizacao-video-chamada.onrender.com"; // <-- SEU LINK DO RENDER AQUI SE ESTIVER NO GITHUB
@@ -585,6 +585,20 @@
         }
 
         // ============================================
+        // SISTEMA DE LOG NA TELA (MÁXIMO DEBUG)
+        // ============================================
+        const debugPanel = document.createElement('div');
+        debugPanel.style.cssText = 'position:fixed; top:70px; left:10px; right:10px; height:150px; background:rgba(0,0,0,0.8); color:lime; font-family:monospace; font-size:10px; z-index:100000; overflow-y:auto; padding:10px; border:1px solid lime; pointer-events:none;';
+        document.body.appendChild(debugPanel);
+        
+        function logDebug(msg) {
+            const time = new Date().toLocaleTimeString();
+            debugPanel.innerHTML += `<div>[${time}] ${msg}</div>`;
+            debugPanel.scrollTop = debugPanel.scrollHeight;
+            console.log(msg);
+        }
+
+        // ============================================
         // CONTROLES DE MIDIA
         // ============================================
         let isMicOn = true, isCamOn = true;
@@ -595,6 +609,7 @@
             const btn = document.getElementById('btn-mic');
             btn.innerHTML = isMicOn ? '<ion-icon name="mic-outline"></ion-icon>' : '<ion-icon name="mic-off-outline"></ion-icon>';
             btn.style.background = isMicOn ? 'rgba(255,255,255,0.15)' : 'rgba(239, 68, 68, 0.8)';
+            logDebug(`Microfone: ${isMicOn}`);
         }
         function toggleCam() {
             if(!localStream) return;
@@ -603,6 +618,7 @@
             const btn = document.getElementById('btn-cam');
             btn.innerHTML = isCamOn ? '<ion-icon name="videocam-outline"></ion-icon>' : '<ion-icon name="videocam-off-outline"></ion-icon>';
             btn.style.background = isCamOn ? 'rgba(255,255,255,0.15)' : 'rgba(239, 68, 68, 0.8)';
+            logDebug(`Câmera: ${isCamOn}`);
         }
         function leaveRoom() {
             if(peer) peer.close();
@@ -610,7 +626,32 @@
             document.getElementById('messages').innerHTML = "";
             document.getElementById('screen-call').classList.remove('active');
             document.getElementById('screen-initial').classList.add('active');
+            logDebug(`Saiu da sala.`);
         }
+
+        // Adiciona Logs no fluxo crítico
+        const origConnect = connect;
+        connect = function() {
+            logDebug(`Clicou Conectar. RoomID gerado/digitado: ${(document.getElementById("room").value.trim() || myId).toUpperCase()}`);
+            origConnect();
+        };
+
+        if(socket) {
+            socket.on("connect", () => {
+                logDebug(`Socket Conectado! ID: ${socket.id}`);
+            });
+            socket.on("connect_error", (err) => {
+                logDebug(`Erro de Socket: ${err.message}`);
+            });
+            socket.on("user-joined", (senderId) => {
+                logDebug(`Amigo ENTROU (ID: ${senderId}). Iniciando Oferta WebRTC!`);
+            });
+            socket.on("offer", (id) => { logDebug(`Oferta recebida de ${id}! Gerando resposta.`); });
+            socket.on("answer", (id) => { logDebug(`Resposta recebida de ${id}! Conexão deve iniciar.`); });
+            socket.on("ice-candidate", () => { logDebug(`Recebeu ICE (Buscando rotas na rede)`); });
+            socket.on("chat-message", () => { logDebug(`Mensagem de chat REBCEBIDA do servidor.`); });
+        }
+        
     </script>
 </body>
 </html>
