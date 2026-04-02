@@ -12,7 +12,7 @@
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 
     <!-- Socket.io -->
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <style>
         :root {
@@ -299,12 +299,14 @@
         <div id="wink-overlay"></div>
     </div>
 
-
     <script>
-        // NOTE: IMPORTANTE! Mude a variável renderUrl para a sua URL do Render! Ex: "https://video-chat-render-xyz.onrender.com"
-        // Se você também upou o HTML pro Render, window.location.origin já vai funcionar.
-        const renderUrl = "https://videochamada-1.onrender.com/";
-        const socket = typeof io !== 'undefined' ? io(renderUrl) : null;
+        // ==========================================
+        // ATENÇÃO: COLOQUE A URL DO RENDER ABAIXO
+        // ==========================================
+        // Exemplo: const renderUrl = "https://videochamada-1.onrender.com";
+        const renderUrl = "https://sinalizacao-video-chamada.onrender.com"; // <-- TROQUE ESSA URL PELA SUA DO RENDER SE PRECISAR!
+
+        const socket = typeof io !== 'undefined' && renderUrl ? io(renderUrl) : null;
         
         let localStream = null;
         let peer;
@@ -401,7 +403,7 @@
 
             peer.onicecandidate = e => {
                 if (e.candidate && socket) {
-                    socket.emit("ice-candidate", e.candidate);
+                    socket.emit("ice-candidate", roomId, e.candidate);
                 }
             };
         }
@@ -409,14 +411,14 @@
         function setupSignaling() {
             if(!socket) return;
             
-            socket.on("user-joined", async () => {
-                document.getElementById('remote-nickname').innerText = "Amigo conectou";
+            socket.on("user-joined", async (senderId, remoteNick) => {
+                document.getElementById('remote-nickname').innerText = remoteNick || "Amigo conectou";
                 const offer = await peer.createOffer();
                 await peer.setLocalDescription(offer);
-                socket.emit("offer", offer);
+                socket.emit("offer", roomId, offer);
             });
 
-            socket.on("offer", async (offer) => {
+            socket.on("offer", async (senderId, offer) => {
                 if(peer.signalingState !== "stable") return;
                 
                 document.getElementById('remote-nickname').innerText = "Amigo conectou";
@@ -424,32 +426,29 @@
                 
                 const answer = await peer.createAnswer();
                 await peer.setLocalDescription(answer);
-                socket.emit("answer", answer);
+                socket.emit("answer", roomId, answer);
 
-                // Drena a fila de candidatos de gelo se carregaram mais rápido que o Offer
                 while(iceCandidatesQueue.length) {
                     peer.addIceCandidate(iceCandidatesQueue.shift()).catch(e => console.error(e));
                 }
             });
 
-            socket.on("answer", async (answer) => {
+            socket.on("answer", async (senderId, answer) => {
                 if(peer.signalingState !== "stable") {
                     await peer.setRemoteDescription(new RTCSessionDescription(answer));
 
-                    // Drena a fila de candidatos aqui também
                     while(iceCandidatesQueue.length) {
                         peer.addIceCandidate(iceCandidatesQueue.shift()).catch(e => console.error(e));
                     }
                 }
             });
 
-            socket.on("ice-candidate", (candidate) => {
+            socket.on("ice-candidate", (senderId, candidate) => {
                 if(candidate) {
                     const ice = new RTCIceCandidate(candidate);
                     if (peer.remoteDescription) {
                         peer.addIceCandidate(ice).catch(e => console.error(e));
                     } else {
-                        // Se o ICE chegar ANTES do offer/answer (super comum na nuvem) salvamos na fila!
                         iceCandidatesQueue.push(ice);
                     }
                 }
@@ -482,7 +481,7 @@
                     
                     const b64 = canvas.toDataURL("image/jpeg", 0.6); // Comprime 60% p/ proteger NodeJS
                     const data = { name: nickname, isImg: true, imgData: b64 };
-                    if(socket) socket.emit("chat-message", data);
+                    if(socket) socket.emit("chat-message", roomId, data);
                     addMessage(data, true);
                 };
                 img.src = ev.target.result;
@@ -493,7 +492,7 @@
 
         function sendWink(type) {
             picker.classList.remove('show');
-            if(socket) socket.emit('chat-message', { isWink: true, winkType: type });
+            if(socket) socket.emit('chat-message', roomId, { isWink: true, winkType: type });
             playWink(type);
         }
 
@@ -531,7 +530,7 @@
             } catch(e) { console.warn("Erro tradução"); }
 
             const data = { name: nickname, msg: msg, translated: translated };
-            if(socket) socket.emit("chat-message", data);
+            if(socket) socket.emit("chat-message", roomId, data);
             addMessage(data, true);
         }
 
@@ -599,3 +598,4 @@
     </script>
 </body>
 </html>
+
