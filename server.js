@@ -5,21 +5,16 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: "*"
   }
 });
 
-// Serve the index.html file statically
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Room states to temporarily hold chat history per room
+// Memória simples de salas
 const rooms = {};
 
 io.on('connection', (socket) => {
@@ -27,49 +22,28 @@ io.on('connection', (socket) => {
 
   socket.on('join-room', (roomId, nickname) => {
     socket.join(roomId);
-    
-    // Initialize room if not exists
+
     if (!rooms[roomId]) {
-      rooms[roomId] = { messages: [], users: [] };
+      rooms[roomId] = [];
     }
-    
-    // Send previous chat history to the newly joined user
-    if (rooms[roomId].messages.length > 0) {
-      socket.emit('chat-history', rooms[roomId].messages);
-    }
-    
-    // Notify others in room
-    socket.to(roomId).emit('user-joined', socket.id, nickname);
-    console.log(`${nickname} (${socket.id}) joined room: ${roomId}`);
-  });
 
-  // WebRTC Signaling Events
-  socket.on('offer', (roomId, offer) => {
-    socket.to(roomId).emit('offer', socket.id, offer);
-  });
+    socket.to(roomId).emit('user-joined');
 
-  socket.on('answer', (roomId, answer) => {
-    socket.to(roomId).emit('answer', socket.id, answer);
-  });
+    socket.on('offer', offer => {
+      socket.to(roomId).emit('offer', offer);
+    });
 
-  socket.on('ice-candidate', (roomId, candidate) => {
-    socket.to(roomId).emit('ice-candidate', socket.id, candidate);
-  });
-  
-  // Custom Sys Message
-  socket.on('sys-msg', (roomId, nickname) => {
-    socket.to(roomId).emit('sys-msg', nickname);
-  });
+    socket.on('answer', answer => {
+      socket.to(roomId).emit('answer', answer);
+    });
 
-  // Chat System routing
-  socket.on('chat-message', (roomId, messageData) => {
-    // Store temporarily in session config limited to 100 max
-    if (rooms[roomId]) {
-       rooms[roomId].messages.push(messageData);
-       if (rooms[roomId].messages.length > 100) rooms[roomId].messages.shift();
-    }
-    // Broadcast to others in the room
-    socket.to(roomId).emit('chat-message', messageData);
+    socket.on('ice-candidate', candidate => {
+      socket.to(roomId).emit('ice-candidate', candidate);
+    });
+
+    socket.on('chat-message', msg => {
+      io.to(roomId).emit('chat-message', msg);
+    });
   });
 
   socket.on('disconnect', () => {
