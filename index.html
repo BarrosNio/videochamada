@@ -169,6 +169,25 @@
         .btn-icon-small { background: transparent; color: rgba(255,255,255,0.7); font-size: 24px; border: none; }
         .btn-send { background: #6366f1; color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; }
 
+        .emoji-picker {
+            position: absolute; bottom: calc(100% + 10px); left: 0; right: 0;
+            background: rgba(20,20,25,0.98); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px; display: none; flex-direction: column; z-index: 50; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+        }
+        .emoji-picker.show { display: flex; }
+
+        #wink-overlay {
+            position: absolute; inset: 0; z-index: 10000; pointer-events: none; 
+            display: none; align-items: center; justify-content: center;
+        }
+        .wink-item { width: 70vw; max-width: 350px; animation: pop 1.8s ease-out forwards; }
+        @keyframes pop {
+            0% { transform: scale(0.1) rotate(-10deg); opacity: 0; }
+            40% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+            70% { transform: scale(0.95) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 0; }
+        }
+
         @media (min-width: 1024px) {
             .app-screen { align-items: center; justify-content: center; }
             .auth-container { max-width: 450px; }
@@ -251,16 +270,33 @@
 
                 <div class="input-row z-30">
                     <select id="lang-select" class="translate-select" title="Auto Translate To">
-                        <option value="en">EN</option>
                         <option value="pt">PT-BR</option>
+                        <option value="en">EN</option>
                         <option value="es">ES</option>
+                        <option value="uk">UK</option>
+                        <option value="ru">RU</option>
+                        <option value="zh">ZH</option>
                     </select>
+
+                    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleImage(event)">
+                    <button class="btn-icon-small" onclick="document.getElementById('file-input').click()"><ion-icon name="image-outline"></ion-icon></button>
+
+                    <div id="emoji-picker" class="emoji-picker">
+                        <div id="emoji-list" class="flex flex-wrap gap-2 justify-center max-h-[150px] overflow-y-auto w-full scrollbar-hide"></div>
+                        <div class="w-full mt-2 border-t border-gray-600 pt-3 flex justify-center gap-3">
+                            <button class="bg-pink-600 hover:bg-pink-500 px-3 py-1.5 rounded text-xs text-white uppercase font-bold transition flex flex-col items-center" onclick="sendWink('kiss')">💋<span class="text-[9px]">Beijo</span></button>
+                            <button class="bg-orange-600 hover:bg-orange-500 px-3 py-1.5 rounded text-xs text-white uppercase font-bold transition flex flex-col items-center" onclick="sendWink('butt')">🍑<span class="text-[9px]">Bunda</span></button>
+                        </div>
+                    </div>
+                    <button class="btn-icon-small" onclick="toggleEmojiPicker()"><ion-icon name="happy-outline"></ion-icon></button>
 
                     <input type="text" id="msg" placeholder="Mensagem..." onkeypress="handleEnter(event)">
                     <button class="btn-send" onclick="send()"><ion-icon name="send"></ion-icon></button>
                 </div>
             </div>
         </div>
+        
+        <div id="wink-overlay"></div>
     </div>
 
 
@@ -274,6 +310,19 @@
         let peer;
         let roomId;
         let nickname = "";
+
+        const emojis = ["😀","😂","🤣","😊","😍","😘","🥰","😎","🤩","😏","🤔","😐","🙄","😴","😷","🤢","🥵","🥶","🤯","🥳","🥺","😢","😭","😡","🤬","😱","👽","👻","💩","👍","👎","👏","🙌","🫶","❤️","💔","🔥","✨","🌟","🎉"];
+        const picker = document.getElementById('emoji-picker');
+        const emojiList = document.getElementById('emoji-list');
+        emojis.forEach(e => {
+            const span = document.createElement('span');
+            span.className = 'text-2xl cursor-pointer hover:scale-125 transition drop-shadow-md'; 
+            span.innerText = e;
+            span.onclick = () => { document.getElementById('msg').value += e; toggleEmojiPicker(); };
+            emojiList.appendChild(span);
+        });
+
+        function toggleEmojiPicker() { picker.classList.toggle('show'); }
         
         // GERAR ID
         const myId = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -408,19 +457,66 @@
         }
 
         // ============================================
-        // CHAT E TRADUÇÃO NATIVA
+        // CHAT, TRANSLATIONS, IMAGES & WINKS
         // ============================================
         function handleEnter(e) { if(e.key === 'Enter') send(); }
+
+        function handleImage(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    const MAX_WIDTH = 600; 
+                    const scaleSize = img.width > MAX_WIDTH ? (MAX_WIDTH / img.width) : 1;
+                    canvas.width = img.width * scaleSize;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const b64 = canvas.toDataURL("image/jpeg", 0.6); // Comprime 60% p/ proteger NodeJS
+                    const data = { name: nickname, isImg: true, imgData: b64 };
+                    if(socket) socket.emit("chat-message", data);
+                    addMessage(data, true);
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = ""; 
+        }
+
+        function sendWink(type) {
+            picker.classList.remove('show');
+            if(socket) socket.emit('chat-message', { isWink: true, winkType: type });
+            playWink(type);
+        }
+
+        function playWink(type) {
+            const wOverlay = document.getElementById('wink-overlay');
+            wOverlay.innerHTML = '';
+            const img = document.createElement('img');
+            img.className = 'wink-item';
+            
+            // Premium Animated Gifs via URL para não sobrecarregar
+            if(type === 'kiss') img.src = "https://media1.giphy.com/media/l41lSXjeosO6M2I12/giphy.gif"; 
+            if(type === 'butt') img.src = "https://media.tenor.com/qL0l013NqE0AAAAC/butt-dance.gif"; 
+            
+            wOverlay.appendChild(img);
+            wOverlay.style.display = 'flex';
+            setTimeout(() => { wOverlay.style.display = 'none'; }, 1800);
+        }
 
         async function send() {
             const msg = document.getElementById("msg").value.trim();
             if (!msg) return;
 
             document.getElementById("msg").value = "";
+            picker.classList.remove('show');
 
-            // Tradução Dinâmica
             const targetLang = document.getElementById('lang-select').value;
-            let translated = `[${targetLang.toUpperCase()}] ${msg}`; // Backup fallback
+            let translated = `[${targetLang.toUpperCase()}] ${msg}`; 
 
             try {
                 const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(msg)}&langpair=Autodetect|${targetLang}`);
@@ -431,28 +527,39 @@
             } catch(e) { console.warn("Erro tradução"); }
 
             const data = { name: nickname, msg: msg, translated: translated };
-
             if(socket) socket.emit("chat-message", data);
             addMessage(data, true);
         }
 
         if(socket) {
             socket.on("chat-message", data => {
-                addMessage(data, false);
+                if(data.isWink) playWink(data.winkType);
+                else addMessage(data, false);
             });
             socket.on('chat-history', history => {
-                history.forEach(data => addMessage(data, false));
+                history.forEach(data => {
+                    if(!data.isWink) addMessage(data, false);
+                });
             });
         }
 
         function addMessage(data, isMine) {
             const div = document.createElement("div");
             div.className = `chat-bubble ${isMine ? 'mine' : ''}`;
-            div.innerHTML = `
-                <div class="text-[9px] uppercase tracking-widest opacity-50 mb-1">${isMine ? 'Você' : data.name}</div>
-                <div class="msg-original">${data.msg}</div>
-                <div class="msg-translated">${data.translated}</div>
-            `;
+            
+            if(data.isImg) {
+                div.innerHTML = `
+                    <div class="text-[9px] uppercase tracking-widest opacity-50 mb-1">${isMine ? 'Você' : data.name}</div>
+                    <img src="${data.imgData}" class="w-full rounded mt-1 shadow" style="max-height:220px; object-fit:cover;">
+                `;
+            } else {
+                div.innerHTML = `
+                    <div class="text-[9px] uppercase tracking-widest opacity-50 mb-1">${isMine ? 'Você' : data.name}</div>
+                    <div class="msg-original">${data.msg}</div>
+                    <div class="msg-translated">${data.translated}</div>
+                `;
+            }
+            
             const container = document.getElementById("messages");
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
