@@ -352,18 +352,20 @@
         let iceCandidatesQueue = []; // Fila para armazenar candidatos perdidos
 
         function connect() {
-            roomId = document.getElementById("room").value.trim() || myId;
+            roomId = (document.getElementById("room").value.trim() || myId).toUpperCase();
             nickname = document.getElementById("nickname").value.trim() || "Anônimo";
 
-            if (!roomId) return alert("Digite o ID do amigo");
-            
             if (!localStream) {
-                alert("⚠️ Se a câmera sumiu, ela pode estar sendo bloqueada pelo Navegador ou Windows. Feche outras abas e reinicie.");
+                alert("⚠️ Por favor clique em Ativar Câmera e permita o acesso antes de conectar.");
                 return;
             }
 
             document.getElementById("screen-initial").classList.remove('active');
             document.getElementById("screen-call").classList.add('active');
+            
+            if (roomId === myId) {
+                alert("Você criou a Sala " + myId + "!\n\nSeu amigo PRECISA digitar " + myId + " no celular/PC dele para se conectar a você, caso contrário ele cairá em uma sala vazia!");
+            }
 
             if (!peer) {
                 initPeerConnection();
