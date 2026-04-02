@@ -1,7 +1,6 @@
 {
-  "name": "premium-video-chat",
+  "name": "videochat",
   "version": "1.0.0",
-  "description": "Video chat with raw WebRTC and Socket.io",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
