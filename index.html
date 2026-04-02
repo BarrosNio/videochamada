@@ -8,13 +8,12 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial;
   background: #0f0f0f;
   color: white;
+  font-family: Arial;
 }
 
-/* LOGIN */
-#login {
+#login, #call {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -22,9 +21,13 @@ body {
   height: 100vh;
 }
 
+#call {
+  display: none;
+}
+
 input, button {
-  margin: 5px;
   padding: 10px;
+  margin: 5px;
   border-radius: 8px;
   border: none;
 }
@@ -34,14 +37,11 @@ button {
   color: white;
 }
 
-/* CALL */
-#call {
-  display: none;
-}
-
+/* VIDEO */
 #remoteVideo {
+  position: absolute;
   width: 100%;
-  height: 100vh;
+  height: 100%;
   object-fit: cover;
 }
 
@@ -59,35 +59,26 @@ button {
   bottom: 0;
   width: 100%;
   background: rgba(0,0,0,0.6);
-  padding: 10px;
 }
 
 #messages {
   max-height: 120px;
   overflow-y: auto;
 }
-
-.msg {
-  margin-bottom: 5px;
-}
 </style>
-
 </head>
+
 <body>
 
-<!-- LOGIN -->
 <div id="login">
-  <h2>Seu ID</h2>
-  <p id="myId"></p>
+  <h2>Seu ID:</h2>
+  <p id="myId">carregando...</p>
 
-  <input id="nick" placeholder="Seu nome">
   <input id="room" placeholder="ID do amigo">
-
   <button onclick="start()">Ativar câmera</button>
   <button onclick="connect()">Conectar</button>
 </div>
 
-<!-- CALL -->
 <div id="call">
   <video id="remoteVideo" autoplay playsinline></video>
   <video id="localVideo" autoplay muted playsinline></video>
@@ -99,33 +90,52 @@ button {
   </div>
 </div>
 
+<!-- IMPORTANTE -->
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
+console.log("Script carregado");
+
+// GERA ID
+const myId = Math.random().toString(36).substring(2, 8);
+document.getElementById("myId").innerText = myId;
+
+// SOCKET
 const socket = io(window.location.origin);
+
+socket.on("connect", () => {
+  console.log("Conectado ao servidor:", socket.id);
+});
 
 let localStream;
 let peer;
 let roomId;
 
-// GERAR ID
-const myId = Math.random().toString(36).substr(2, 6);
-document.getElementById("myId").innerText = myId;
-
 // ATIVAR CAMERA
 async function start() {
-  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  document.getElementById("localVideo").srcObject = localStream;
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    document.getElementById("localVideo").srcObject = localStream;
+    alert("Câmera ativada");
+  } catch (e) {
+    alert("Erro ao acessar câmera");
+    console.error(e);
+  }
 }
 
 // CONECTAR
 function connect() {
   roomId = document.getElementById("room").value;
 
+  if (!roomId) {
+    alert("Digite o ID do amigo");
+    return;
+  }
+
   socket.emit("join-room", roomId);
 
   document.getElementById("login").style.display = "none";
-  document.getElementById("call").style.display = "block";
+  document.getElementById("call").style.display = "flex";
 
   createPeer();
 }
@@ -134,7 +144,9 @@ function connect() {
 function createPeer() {
   peer = new RTCPeerConnection();
 
-  localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+  localStream.getTracks().forEach(track => {
+    peer.addTrack(track, localStream);
+  });
 
   peer.ontrack = e => {
     document.getElementById("remoteVideo").srcObject = e.streams[0];
@@ -189,7 +201,6 @@ socket.on("chat-message", data => {
 
 function addMessage(data) {
   const div = document.createElement("div");
-  div.classList.add("msg");
   div.innerHTML = `<b>${data.msg}</b><br><small>${data.translated}</small>`;
   document.getElementById("messages").appendChild(div);
 }
