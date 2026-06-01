@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Premium Video Connect</title>
+    <title>ALdi e Cliere chat video</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -203,33 +203,25 @@
     <div class="ambient-glow"></div>
 
     <!-- INITIAL SCREEN / LOGIN -->
-    <div id="screen-initial" class="app-screen active">
-        <div class="auth-container glass-panel">
-            <h1 class="text-3xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500 pb-1">
-                Conectar Agora
-            </h1>
-
-            <div class="text-left w-full">
-                <label class="text-xs uppercase tracking-wider text-gray-400 font-semibold block ml-1">Seu ID:</label>
-                <div class="id-box" onclick="copyMyID()">
-                    <span id="myId">Gerando...</span>
-                    <ion-icon name="copy-outline"></ion-icon>
-                </div>
+    <div id="screen-initial" class="app-screen active" style="background: linear-gradient(135deg, #07070a 0%, #16162a 100%); align-items: center; justify-content: center;">
+        
+        <div class="auth-container glass-panel" style="padding: 40px 30px; gap: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); z-index: 2; position: relative;">
+            
+            <!-- Foto de Casal no Círculo -->
+            <div style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; margin: 0 auto; border: 4px solid rgba(255, 51, 102, 0.8); box-shadow: 0 0 30px rgba(255, 51, 102, 0.4);">
+                <img src="capa.jpg" style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%;" alt="ALdi e Cliere">
             </div>
 
-            <input type="text" id="nickname" class="premium-input" placeholder="Seu nome">
-            <input type="text" id="room" class="premium-input" placeholder="ID do amigo">
+            <div>
+                <h1 class="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-red-500" style="line-height: 1.2; margin-top: 10px;">
+                    ALdi e Cliere<br><span class="text-xl">chat video</span>
+                </h1>
+                <p id="room-status" class="text-sm text-gray-400 mt-2">Conexão Privada Exclusiva</p>
+            </div>
 
-            <!-- ATIVAR CAMERA EXPLICITAMENTE -->
-            <button onclick="start()" class="premium-btn-alt">
-                <ion-icon name="camera-outline"></ion-icon>
-                <span>Ativar Câmera</span>
-            </button>
-
-            <!-- CONECTAR -->
-            <button onclick="connect()" class="premium-btn">
-                <ion-icon name="videocam-outline"></ion-icon>
-                <span>Conectar</span>
+            <button id="btn-action" onclick="handleMainAction()" class="premium-btn" style="background: linear-gradient(135deg, #ff0055 0%, #ff3366 100%); padding: 18px; font-size: 18px; margin-top: 10px; border-radius: 20px;">
+                <ion-icon id="action-icon" name="videocam"></ion-icon>
+                <span id="btn-text">Entrar no Chat</span>
             </button>
         </div>
     </div>
@@ -303,11 +295,7 @@
         // ==========================================
         // CONFIGURAÇÃO AUTOMÁTICA DE SERVIDOR
         // ==========================================
-        let renderUrl = "https://videochamada-1.onrender.com";
-        if (renderUrl.includes("github.io") || renderUrl.includes("file://")) {
-            // Se acessar pelo GitHub, ele força usar o Render:
-            renderUrl = "https://sinalizacao-video-chamada.onrender.com"; // <-- SEU LINK DO RENDER AQUI SE ESTIVER NO GITHUB
-        }
+        const renderUrl = "https://videochamada-2-ixj7.onrender.com"; // NOVO RENDER DO USUÁRIO
         const socket = typeof io !== 'undefined' ? io(renderUrl) : null;
         
         let localStream = null;
@@ -328,46 +316,41 @@
 
         function toggleEmojiPicker() { picker.classList.toggle('show'); }
         
-        // GERAR ID
-        const myId = Math.random().toString(36).substring(2, 8).toUpperCase();
-        document.getElementById("myId").innerText = myId;
-        function copyMyID() { navigator.clipboard.writeText(myId).then(()=>alert("ID Copiado!")); }
+        async function handleMainAction() {
+            const btn = document.getElementById('btn-action');
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.innerText = "Conectando...";
 
-        // EXPLICIT CAMERA START
-        async function start() {
-            try {
-                if (!navigator.mediaDevices) {
-                    alert("Navegador não suporta câmera");
+            // 1. Iniciar a câmera automaticamente
+            if (!localStream) {
+                try {
+                    if (!navigator.mediaDevices) throw new Error("Sem suporte a mídia");
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+                    const localVid = document.getElementById("localVideo");
+                    localVid.srcObject = localStream;
+                    localVid.play().catch(e => console.warn(e));
+                } catch (e) {
+                    alert("Por favor, permita o acesso à câmera e microfone para continuar.");
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.innerText = "Entrar no Chat";
                     return;
                 }
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById("localVideo").srcObject = localStream;
-                alert("✅ Câmera ativada com sucesso");
-            } catch (e) {
-                console.error(e);
-                if (e.name === "NotAllowedError") alert("❌ Permissão negada pelo navegador");
-                else alert("❌ Erro ao acessar câmera");
             }
+
+            nickname = "Amor"; // Nome padrão para os dois
+            roomId = "SALA_SECRETA_ALDI_CLIERE"; // Sala privada fixa
+            
+            finalizeConnection();
         }
 
         let hasJoined = false;
         let iceCandidatesQueue = []; // Fila para armazenar candidatos perdidos
 
-        function connect() {
-            roomId = (document.getElementById("room").value.trim() || myId).toUpperCase();
-            nickname = document.getElementById("nickname").value.trim() || "Anônimo";
-
-            if (!localStream) {
-                alert("⚠️ Por favor clique em Ativar Câmera e permita o acesso antes de conectar.");
-                return;
-            }
-
+        function finalizeConnection() {
             document.getElementById("screen-initial").classList.remove('active');
             document.getElementById("screen-call").classList.add('active');
-            
-            if (roomId === myId) {
-                alert("Você criou a Sala " + myId + "!\n\nSeu amigo PRECISA digitar " + myId + " no celular/PC dele para se conectar a você, caso contrário ele cairá em uma sala vazia!");
-            }
 
             if (!peer) {
                 initPeerConnection();
@@ -388,7 +371,23 @@
             peer = new RTCPeerConnection({
                 iceServers: [
                     { urls: "stun:stun.l.google.com:19302" },
-                    { urls: "stun:stun1.l.google.com:19302"}
+                    { urls: "stun:stun1.l.google.com:19302" },
+                    // Servidor TURN gratuito para atravessar bloqueios de operadoras de celular (4G/Symmetric NAT)
+                    {
+                        urls: "turn:openrelay.metered.ca:80",
+                        username: "openrelayproject",
+                        credential: "openrelayproject"
+                    },
+                    {
+                        urls: "turn:openrelay.metered.ca:443",
+                        username: "openrelayproject",
+                        credential: "openrelayproject"
+                    },
+                    {
+                        urls: "turn:openrelay.metered.ca:443?transport=tcp",
+                        username: "openrelayproject",
+                        credential: "openrelayproject"
+                    }
                 ]
             });
 
@@ -402,6 +401,8 @@
                 const remoteVid = document.getElementById("remoteVideo");
                 if (remoteVid.srcObject !== e.streams[0]) {
                     remoteVid.srcObject = e.streams[0];
+                    // Força o vídeo do amigo a dar play (evita tela preta no iPhone/Safari)
+                    remoteVid.play().catch(err => console.warn("Erro no autoplay remoto:", err));
                 }
             };
 
@@ -614,4 +615,3 @@
     </script>
 </body>
 </html>
-
