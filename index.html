@@ -364,7 +364,11 @@
         }
 
         function initPeerConnection() {
-            if (peer) return; // Não recriar se o usuário apertar conectar 2x 
+            if (peer) {
+                peer.onicecandidate = null;
+                peer.ontrack = null;
+                peer.close();
+            }
 
             iceCandidatesQueue = [];
 
@@ -372,6 +376,8 @@
                 iceServers: [
                     { urls: "stun:stun.l.google.com:19302" },
                     { urls: "stun:stun1.l.google.com:19302" },
+                    { urls: "stun:stun2.l.google.com:19302" },
+                    { urls: "stun:stun3.l.google.com:19302" },
                     // Servidor TURN gratuito para atravessar bloqueios de operadoras de celular (4G/Symmetric NAT)
                     {
                         urls: "turn:openrelay.metered.ca:80",
@@ -411,22 +417,41 @@
                     socket.emit("ice-candidate", roomId, e.candidate);
                 }
             };
+
+            peer.oniceconnectionstatechange = () => {
+                const nickEl = document.getElementById('remote-nickname');
+                if(peer.iceConnectionState === "disconnected" || peer.iceConnectionState === "failed") {
+                    nickEl.innerText = "🔴 Conexão fraca! Atualize a página...";
+                    nickEl.style.color = "#ff4444";
+                } else if (peer.iceConnectionState === "connected") {
+                    nickEl.innerText = "🟢 Vídeo Conectado!";
+                    nickEl.style.color = "#44ff44";
+                }
+            };
         }
 
         function setupSignaling() {
             if(!socket) return;
             
             socket.on("user-joined", async (senderId, remoteNick) => {
-                document.getElementById('remote-nickname').innerText = remoteNick || "Amigo conectou";
+                document.getElementById('remote-nickname').innerText = "Conectando vídeo...";
+                
+                // Força recriar a conexão limpa sempre que alguém entrar
+                initPeerConnection();
+
                 const offer = await peer.createOffer();
                 await peer.setLocalDescription(offer);
                 socket.emit("offer", roomId, offer);
             });
 
             socket.on("offer", async (senderId, offer) => {
-                if(peer.signalingState !== "stable") return;
+                document.getElementById('remote-nickname').innerText = "Conectando vídeo...";
                 
-                document.getElementById('remote-nickname').innerText = "Amigo conectou";
+                // Se o estado não for estável, a conexão está suja. Recriar.
+                if(peer.signalingState !== "stable") {
+                    initPeerConnection();
+                }
+                
                 await peer.setRemoteDescription(new RTCSessionDescription(offer));
                 
                 const answer = await peer.createAnswer();
