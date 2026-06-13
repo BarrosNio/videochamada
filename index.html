@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ALdi e Cliere chat video</title>
+    <title>Web Chat</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -211,19 +211,19 @@
         
         <div class="auth-container glass-panel" style="padding: 40px 30px; gap: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); z-index: 2; position: relative;">
             
-            <!-- Foto de Casal no Círculo -->
-            <div style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; margin: 0 auto; border: 4px solid rgba(255, 51, 102, 0.8); box-shadow: 0 0 30px rgba(255, 51, 102, 0.4);">
-                <img src="capa.jpg" style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%;" alt="ALdi e Cliere">
+            <!-- Logo Web Chat -->
+            <div style="width: 180px; height: 180px; margin: 0 auto; overflow: hidden; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+                <img src="capa.png" style="width: 100%; height: 100%; object-fit: contain; background: #000;" alt="Web Chat">
             </div>
 
             <div>
-                <h1 class="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-red-500" style="line-height: 1.2; margin-top: 10px;">
-                    ALdi e Cliere<br><span class="text-xl">chat video</span>
+                <h1 class="text-3xl font-extrabold text-white" style="line-height: 1.2; margin-top: 15px;">
+                    Web Chat
                 </h1>
-                <p id="room-status" class="text-sm text-gray-400 mt-2">Conexão Privada Exclusiva</p>
+                <p id="room-status" class="text-sm text-gray-400 mt-2">Conexão Privada</p>
             </div>
 
-            <button id="btn-action" onclick="handleMainAction()" class="premium-btn" style="background: linear-gradient(135deg, #ff0055 0%, #ff3366 100%); padding: 18px; font-size: 18px; margin-top: 10px; border-radius: 20px;">
+            <button id="btn-action" onclick="handleMainAction()" class="premium-btn" style="background: #ffffff; color: #000; padding: 18px; font-size: 18px; margin-top: 10px; border-radius: 20px;">
                 <ion-icon id="action-icon" name="videocam"></ion-icon>
                 <span id="btn-text">Entrar no Chat</span>
             </button>
