@@ -13,6 +13,8 @@
 
     <!-- Socket.io -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
 
     <style>
         :root {
@@ -220,6 +222,97 @@
             .ui-layer { max-width: 1200px; margin: 0 auto; left: 0; right: 0; }
             .chat-scroll-area { width: 38%; max-width: 420px; left: 40px; bottom: 175px; }
         }
+
+        /* RECURSO ASSISTIR JUNTOS (WATCH TOGETHER) */
+        .control-btn.btn-watch-active {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%) !important;
+            color: #fff !important;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.7);
+        }
+
+        .watch-modal-overlay {
+            position: absolute; inset: 0; z-index: 10002;
+            background: rgba(5, 5, 10, 0.82); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center;
+            padding: 18px; pointer-events: auto;
+        }
+        .watch-modal-overlay.show { display: flex; }
+
+        .watch-card {
+            background: rgba(18, 18, 26, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px; padding: 22px 20px;
+            width: 100%; max-width: 440px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(99, 102, 241, 0.2);
+            display: flex; flex-direction: column; gap: 14px;
+            animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.92) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .tab-btn {
+            flex: 1; padding: 10px 12px; border-radius: 12px; font-weight: 600; font-size: 13px;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: #94a3b8; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: #fff; border-color: transparent;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+
+        .preset-chip {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            padding: 5px 11px; border-radius: 20px; font-size: 11.5px; color: #cbd5e1;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap; user-select: none;
+        }
+        .preset-chip:hover {
+            background: rgba(99, 102, 241, 0.35); border-color: rgba(99, 102, 241, 0.6); color: #fff;
+        }
+
+        /* SHARED PLAYER WRAPPER */
+        #shared-player-wrap {
+            position: absolute;
+            top: 75px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 760px;
+            background: #000; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 35px rgba(99, 102, 241, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            z-index: 18; display: none; flex-direction: column;
+            pointer-events: auto;
+        }
+        #shared-player-wrap.active { display: flex; }
+
+        .shared-player-header {
+            background: rgba(14, 14, 20, 0.96);
+            padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+        }
+
+        .player-video-box {
+            position: relative; width: 100%; aspect-ratio: 16/9; background: #000;
+        }
+        .player-video-box iframe, .player-video-box video {
+            position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; border: none;
+        }
+
+        /* TOAST FLOATING BANNER */
+        .watch-toast {
+            position: absolute; top: 75px; left: 50%; transform: translateX(-50%);
+            background: rgba(18, 18, 28, 0.94); backdrop-filter: blur(14px);
+            border: 1px solid rgba(99, 102, 241, 0.5);
+            padding: 9px 18px; border-radius: 30px;
+            color: #fff; font-size: 13px; font-weight: 500;
+            display: none; align-items: center; gap: 10px;
+            z-index: 10001; box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            white-space: nowrap; animation: modalPop 0.2s ease-out;
+            pointer-events: auto;
+        }
+        .watch-toast.show { display: flex; }
     </style>
 </head>
 
@@ -244,7 +337,9 @@
                 <p id="room-status" class="text-sm text-gray-400 mt-2">Conexão Privada</p>
             </div>
 
-            <button id="btn-action" onclick="handleMainAction()" class="premium-btn" style="background: #ffffff; color: #000; padding: 18px; font-size: 18px; margin-top: 10px; border-radius: 20px;">
+            <input type="text" id="nickname-input" class="premium-input text-center" placeholder="Seu nome (opcional)" style="font-size: 15px; padding: 13px;">
+
+            <button id="btn-action" onclick="handleMainAction()" class="premium-btn" style="background: #ffffff; color: #000; padding: 18px; font-size: 18px; margin-top: 5px; border-radius: 20px;">
                 <ion-icon id="action-icon" name="videocam"></ion-icon>
                 <span id="btn-text">Entrar no Chat</span>
             </button>
@@ -268,19 +363,40 @@
                 </div>
             </div>
 
+            <!-- SHARED WATCH TOGETHER PLAYER -->
+            <div id="shared-player-wrap">
+                <div class="shared-player-header">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
+                        <span class="font-bold text-gray-200" id="shared-player-title">Assistindo Juntos</span>
+                        <span class="text-[10px] text-gray-400 bg-white/10 px-2 py-0.5 rounded-full" id="shared-player-badge">Sincronizado</span>
+                    </div>
+                    <button class="bg-red-500/20 hover:bg-red-500/40 text-red-300 px-2.5 py-1 rounded-lg text-xs font-semibold transition" onclick="confirmCloseSharedVideo()">
+                        ✕ Fechar Vídeo
+                    </button>
+                </div>
+                <div class="player-video-box">
+                    <div id="yt-player-target"></div>
+                    <video id="html5-shared-player" controls playsinline style="display:none;"></video>
+                </div>
+            </div>
+
             <div id="messages" class="chat-scroll-area"></div>
         </div>
 
         <div class="ui-layer">
             <div class="bottom-ui-area">
                 <div class="controls-row">
-                    <button class="control-btn" id="btn-mic" onclick="toggleMic()">
+                    <button class="control-btn" id="btn-mic" onclick="toggleMic()" title="Microfone">
                         <ion-icon name="mic-outline"></ion-icon>
                     </button>
-                    <button class="control-btn btn-end" onclick="leaveRoom()">
+                    <button class="control-btn" id="btn-watch" onclick="toggleWatchModal()" title="Assistir Vídeo Junto">
+                        <ion-icon name="film-outline"></ion-icon>
+                    </button>
+                    <button class="control-btn btn-end" onclick="leaveRoom()" title="Encerrar Chamada">
                         <ion-icon name="call"></ion-icon>
                     </button>
-                    <button class="control-btn" id="btn-cam" onclick="toggleCam()">
+                    <button class="control-btn" id="btn-cam" onclick="toggleCam()" title="Câmera">
                         <ion-icon name="videocam-outline"></ion-icon>
                     </button>
                 </div>
@@ -313,6 +429,122 @@
             </div>
         </div>
         
+        <!-- STATUS TOAST CONVITE ENVIADO -->
+        <div id="watch-status-toast" class="watch-toast">
+            <span id="watch-toast-text">⏳ Convite enviado! Aguardando resposta...</span>
+            <button class="bg-red-500/30 hover:bg-red-500/50 text-red-200 text-xs px-2.5 py-1 rounded-full font-bold ml-1 transition" onclick="cancelWatchInvite()">
+                Cancelar
+            </button>
+        </div>
+
+        <!-- MODAL ESCOLHER VÍDEO -->
+        <div id="watch-modal" class="watch-modal-overlay">
+            <div class="watch-card">
+                <div class="flex items-center justify-between pb-2 border-b border-white/10">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md">
+                            <ion-icon name="film" style="font-size: 19px;"></ion-icon>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white">Assistir Vídeos Juntos</h3>
+                            <p class="text-xs text-gray-400">Escolha o vídeo e convide para sincronizar</p>
+                        </div>
+                    </div>
+                    <button class="text-gray-400 hover:text-white text-xl p-1 leading-none" onclick="closeWatchModal()">✕</button>
+                </div>
+
+                <!-- Tabs Origem -->
+                <div class="flex gap-2">
+                    <button id="tab-yt" class="tab-btn active" onclick="switchWatchTab('yt')">
+                        <ion-icon name="logo-youtube" class="text-red-500 text-base"></ion-icon>
+                        YouTube
+                    </button>
+                    <button id="tab-web" class="tab-btn" onclick="switchWatchTab('web')">
+                        <ion-icon name="globe-outline" class="text-blue-400 text-base"></ion-icon>
+                        Meu Site / Link
+                    </button>
+                </div>
+
+                <!-- Painel YouTube -->
+                <div id="panel-yt" class="flex flex-col gap-3">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-300 block mb-1">Link ou ID do YouTube:</label>
+                        <input type="text" id="yt-url-input" class="premium-input text-sm p-3" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-gray-400 block mb-1.5 font-medium">Sugestões Rápidas:</span>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="preset-chip" onclick="setPresetYt('jfKfPfyJRdk', 'Lofi Hip Hop Chill')">🎵 Lofi Chill</span>
+                            <span class="preset-chip" onclick="setPresetYt('aqz-KE-bpKQ', 'Big Buck Bunny (Animação)')">🐰 Big Buck Bunny</span>
+                            <span class="preset-chip" onclick="setPresetYt('Bey4XXJAqS8', 'Paisagens 4K Relaxante')">🌄 Natureza 4K</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel Web / Meu Site -->
+                <div id="panel-web" class="flex flex-col gap-3" style="display: none;">
+                    <div>
+                        <label class="text-xs font-semibold text-gray-300 block mb-1">URL Direta do Vídeo (.mp4 / .webm):</label>
+                        <input type="text" id="web-url-input" class="premium-input text-sm p-3" placeholder="https://meusite.com/video.mp4">
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-gray-400 block mb-1.5 font-medium">Amostras Disponíveis:</span>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="preset-chip" onclick="setPresetWeb('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 'Big Buck Bunny (MP4)')">🎬 Amostra MP4 Google</span>
+                            <span class="preset-chip" onclick="setPresetWeb('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', 'Elephants Dream (MP4)')">🐘 Elephants Dream</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões Ação -->
+                <div class="flex gap-2 pt-2 border-t border-white/10">
+                    <button class="premium-btn-alt flex-1 py-3 text-sm rounded-xl" onclick="closeWatchModal()">
+                        Cancelar
+                    </button>
+                    <button class="premium-btn flex-1 py-3 text-sm rounded-xl" style="background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);" onclick="sendWatchInvite()">
+                        <ion-icon name="paper-plane-outline"></ion-icon>
+                        Enviar Convite
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL CONVITE RECEBIDO -->
+        <div id="watch-invite-modal" class="watch-modal-overlay">
+            <div class="watch-card text-center" style="max-width: 390px;">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center mx-auto text-white text-2xl shadow-lg shadow-pink-500/30">
+                    <ion-icon name="film"></ion-icon>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-1">Convite para Assistir Juntos!</h3>
+                    <p class="text-sm text-gray-300 leading-relaxed" id="watch-invite-message">
+                        Seu parceiro está te convidando para assistir a um vídeo junto com ele. Deseja participar?
+                    </p>
+                </div>
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-left flex items-center gap-3">
+                    <div id="watch-invite-icon" class="text-red-500 text-2xl flex-shrink-0">
+                        <ion-icon name="logo-youtube"></ion-icon>
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="text-[10px] text-gray-400 uppercase font-semibold" id="watch-invite-type">Vídeo Compartilhado</div>
+                        <div class="text-xs font-bold text-white truncate" id="watch-invite-title">Vídeo Selecionado</div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button class="premium-btn-alt flex-1 py-3 text-sm rounded-xl bg-red-500/20 hover:bg-red-500/30 border-red-500/40 text-red-200" onclick="declineWatchInvite()">
+                        <ion-icon name="close-circle-outline"></ion-icon>
+                        Recusar
+                    </button>
+                    <button class="premium-btn flex-1 py-3 text-sm rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500" onclick="acceptWatchInvite()">
+                        <ion-icon name="checkmark-circle-outline"></ion-icon>
+                        Aceitar Convite
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div id="wink-overlay"></div>
     </div>
 
@@ -364,7 +596,13 @@
                 }
             }
 
-            nickname = "Amor"; // Nome padrão para os dois
+            const nameInput = document.getElementById("nickname-input");
+            if (nameInput && nameInput.value.trim()) {
+                nickname = nameInput.value.trim();
+                try { localStorage.setItem('user_nickname', nickname); } catch(e) {}
+            } else {
+                try { nickname = localStorage.getItem('user_nickname') || "Amor"; } catch(e) { nickname = "Amor"; }
+            }
             roomId = "SALA_SECRETA_ALDI_CLIERE"; // Sala privada fixa
             
             finalizeConnection();
@@ -511,6 +749,21 @@
             
             socket.on("sys-msg", (nick) => {
                 document.getElementById('remote-nickname').innerText = nick;
+            });
+
+            // ============================================
+            // EVENTOS DE ASSISTIR JUNTOS (WATCH TOGETHER)
+            // ============================================
+            socket.on("watch-invite", (senderId, data) => {
+                handleIncomingWatchInvite(senderId, data);
+            });
+
+            socket.on("watch-response", (senderId, data) => {
+                handleIncomingWatchResponse(senderId, data);
+            });
+
+            socket.on("watch-sync", (senderId, data) => {
+                handleIncomingWatchSync(senderId, data);
             });
         }
 
@@ -678,12 +931,421 @@
             btn.innerHTML = isCamOn ? '<ion-icon name="videocam-outline"></ion-icon>' : '<ion-icon name="videocam-off-outline"></ion-icon>';
             btn.style.background = isCamOn ? 'rgba(255,255,255,0.15)' : 'rgba(239, 68, 68, 0.8)';
         }
+        // ============================================
+        // RECURSO ASSISTIR JUNTOS (WATCH TOGETHER)
+        // ============================================
+        let isWatchActive = false;
+        let currentWatchSource = 'yt';
+        let currentVideoType = null;
+        let currentVideoUrl = null;
+        let currentVideoId = null;
+        let currentVideoTitle = '';
+        let pendingWatchInvite = null;
+        let activeOutgoingInvite = null;
+        let ytPlayer = null;
+        let isSyncing = false;
+
+        function toggleWatchModal() {
+            const modal = document.getElementById('watch-modal');
+            if (modal.classList.contains('show')) {
+                closeWatchModal();
+            } else {
+                openWatchModal();
+            }
+        }
+
+        function openWatchModal() {
+            document.getElementById('watch-modal').classList.add('show');
+        }
+
+        function closeWatchModal() {
+            document.getElementById('watch-modal').classList.remove('show');
+        }
+
+        function switchWatchTab(tab) {
+            currentWatchSource = tab;
+            const tabYt = document.getElementById('tab-yt');
+            const tabWeb = document.getElementById('tab-web');
+            const panelYt = document.getElementById('panel-yt');
+            const panelWeb = document.getElementById('panel-web');
+
+            if (tab === 'yt') {
+                tabYt.classList.add('active');
+                tabWeb.classList.remove('active');
+                panelYt.style.display = 'flex';
+                panelWeb.style.display = 'none';
+            } else {
+                tabWeb.classList.add('active');
+                tabYt.classList.remove('active');
+                panelWeb.style.display = 'flex';
+                panelYt.style.display = 'none';
+            }
+        }
+
+        function setPresetYt(id, title) {
+            document.getElementById('yt-url-input').value = `https://www.youtube.com/watch?v=${id}`;
+        }
+
+        function setPresetWeb(url, title) {
+            document.getElementById('web-url-input').value = url;
+        }
+
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            const trimmed = url.trim();
+            if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+            const match = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/);
+            return match ? match[1] : null;
+        }
+
+        function sendWatchInvite() {
+            let type = '';
+            let url = '';
+            let id = '';
+            let title = '';
+
+            if (currentWatchSource === 'yt') {
+                const rawUrl = document.getElementById('yt-url-input').value.trim();
+                id = extractYouTubeId(rawUrl);
+                if (!id) {
+                    alert('Por favor, digite um link ou ID válido do YouTube.');
+                    return;
+                }
+                type = 'youtube';
+                url = `https://www.youtube.com/watch?v=${id}`;
+                title = `YouTube (${id})`;
+            } else {
+                url = document.getElementById('web-url-input').value.trim();
+                if (!url) {
+                    alert('Por favor, insira o link direto do vídeo (.mp4 ou .webm).');
+                    return;
+                }
+                type = 'direct';
+                title = url.split('/').pop().split('?')[0] || 'Vídeo Web';
+            }
+
+            closeWatchModal();
+
+            activeOutgoingInvite = {
+                senderNick: nickname || 'Seu parceiro',
+                videoType: type,
+                videoUrl: url,
+                videoId: id,
+                videoTitle: title,
+                timestamp: Date.now()
+            };
+
+            if (socket) {
+                socket.emit('watch-invite', roomId, activeOutgoingInvite);
+            }
+
+            const toast = document.getElementById('watch-status-toast');
+            document.getElementById('watch-toast-text').innerText = '⏳ Convite enviado! Aguardando resposta...';
+            toast.classList.add('show');
+
+            addSystemNotice(`Convite enviado: ${title}`);
+        }
+
+        function cancelWatchInvite() {
+            if (activeOutgoingInvite && socket) {
+                socket.emit('watch-response', roomId, {
+                    action: 'canceled',
+                    senderNick: nickname
+                });
+            }
+            activeOutgoingInvite = null;
+            document.getElementById('watch-status-toast').classList.remove('show');
+            addSystemNotice('Você cancelou o convite para assistir vídeos.');
+        }
+
+        function handleIncomingWatchInvite(senderId, data) {
+            pendingWatchInvite = data;
+
+            document.getElementById('watch-invite-message').innerHTML = `
+                <strong class="text-white">${data.senderNick || 'Seu parceiro'}</strong> está te convidando para assistir a um vídeo junto com ele. Deseja participar?
+            `;
+            document.getElementById('watch-invite-type').innerText = data.videoType === 'youtube' ? 'YouTube' : 'Vídeo Web';
+            document.getElementById('watch-invite-title').innerText = data.videoTitle || data.videoUrl;
+
+            const iconEl = document.getElementById('watch-invite-icon');
+            if (data.videoType === 'youtube') {
+                iconEl.innerHTML = '<ion-icon name="logo-youtube"></ion-icon>';
+                iconEl.className = 'text-red-500 text-2xl flex-shrink-0';
+            } else {
+                iconEl.innerHTML = '<ion-icon name="globe-outline"></ion-icon>';
+                iconEl.className = 'text-blue-400 text-2xl flex-shrink-0';
+            }
+
+            document.getElementById('watch-invite-modal').classList.add('show');
+        }
+
+        function acceptWatchInvite() {
+            if (!pendingWatchInvite) return;
+            const inviteData = { ...pendingWatchInvite };
+            pendingWatchInvite = null;
+
+            document.getElementById('watch-invite-modal').classList.remove('show');
+
+            if (socket) {
+                socket.emit('watch-response', roomId, {
+                    action: 'accepted',
+                    responderNick: nickname,
+                    videoType: inviteData.videoType,
+                    videoUrl: inviteData.videoUrl,
+                    videoId: inviteData.videoId,
+                    videoTitle: inviteData.videoTitle
+                });
+            }
+
+            startSharedVideo(inviteData.videoType, inviteData.videoUrl, inviteData.videoId, inviteData.videoTitle);
+            addSystemNotice(`Você aceitou o convite para assistir vídeos.`);
+        }
+
+        function declineWatchInvite() {
+            if (!pendingWatchInvite) return;
+            pendingWatchInvite = null;
+
+            document.getElementById('watch-invite-modal').classList.remove('show');
+
+            if (socket) {
+                socket.emit('watch-response', roomId, {
+                    action: 'declined',
+                    responderNick: nickname
+                });
+            }
+
+            addSystemNotice(`Você recusou o convite para assistir vídeos.`);
+        }
+
+        function handleIncomingWatchResponse(senderId, data) {
+            document.getElementById('watch-status-toast').classList.remove('show');
+
+            if (data.action === 'accepted') {
+                activeOutgoingInvite = null;
+                startSharedVideo(data.videoType, data.videoUrl, data.videoId, data.videoTitle);
+                addSystemNotice(`${data.responderNick || 'Seu parceiro'} aceitou! Iniciando vídeo...`);
+            } else if (data.action === 'declined') {
+                activeOutgoingInvite = null;
+                addSystemNotice(`${data.responderNick || 'Seu parceiro'} recusou o convite.`);
+            } else if (data.action === 'canceled') {
+                pendingWatchInvite = null;
+                document.getElementById('watch-invite-modal').classList.remove('show');
+                addSystemNotice(`O convite para assistir foi cancelado.`);
+            }
+        }
+
+        function startSharedVideo(type, url, id, title) {
+            isWatchActive = true;
+            currentVideoType = type;
+            currentVideoUrl = url;
+            currentVideoId = id;
+            currentVideoTitle = title;
+
+            document.getElementById('btn-watch').classList.add('btn-watch-active');
+            document.getElementById('shared-player-wrap').classList.add('active');
+            document.getElementById('shared-player-title').innerText = title || (type === 'youtube' ? 'YouTube' : 'Vídeo Web');
+
+            const ytTarget = document.getElementById('yt-player-target');
+            const html5Player = document.getElementById('html5-shared-player');
+
+            if (type === 'youtube') {
+                html5Player.style.display = 'none';
+                html5Player.pause();
+                ytTarget.style.display = 'block';
+
+                initYouTubePlayer(id);
+            } else {
+                ytTarget.style.display = 'none';
+                if (ytPlayer && typeof ytPlayer.destroy === 'function') {
+                    try { ytPlayer.destroy(); ytPlayer = null; } catch(e) {}
+                }
+
+                html5Player.style.display = 'block';
+                html5Player.src = url;
+                initHtml5Player();
+            }
+        }
+
+        function initYouTubePlayer(videoId) {
+            if (ytPlayer && typeof ytPlayer.destroy === 'function') {
+                try { ytPlayer.destroy(); } catch(e) {}
+                ytPlayer = null;
+            }
+
+            document.getElementById('yt-player-target').innerHTML = '<div id="yt-iframe-placeholder"></div>';
+
+            const onPlayerReady = (event) => {
+                event.target.playVideo();
+            };
+
+            const onPlayerStateChange = (event) => {
+                if (isSyncing || !ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
+                const state = event.data;
+                const currentTime = ytPlayer.getCurrentTime();
+
+                if (state === YT.PlayerState.PLAYING) {
+                    emitWatchSync({ action: 'play', time: currentTime });
+                } else if (state === YT.PlayerState.PAUSED) {
+                    emitWatchSync({ action: 'pause', time: currentTime });
+                }
+            };
+
+            if (window.YT && window.YT.Player) {
+                ytPlayer = new YT.Player('yt-iframe-placeholder', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: {
+                        autoplay: 1,
+                        playsinline: 1,
+                        controls: 1,
+                        rel: 0
+                    },
+                    events: {
+                        onReady: onPlayerReady,
+                        onStateChange: onPlayerStateChange
+                    }
+                });
+            } else {
+                document.getElementById('yt-player-target').innerHTML = `
+                    <iframe id="yt-fallback-frame" width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&playsinline=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                `;
+            }
+        }
+
+        function initHtml5Player() {
+            const player = document.getElementById('html5-shared-player');
+
+            player.onplay = () => {
+                if (isSyncing) return;
+                emitWatchSync({ action: 'play', time: player.currentTime });
+            };
+
+            player.onpause = () => {
+                if (isSyncing) return;
+                emitWatchSync({ action: 'pause', time: player.currentTime });
+            };
+
+            player.onseeked = () => {
+                if (isSyncing) return;
+                emitWatchSync({ action: 'seek', time: player.currentTime });
+            };
+
+            player.play().catch(e => console.warn('Autoplay requer interação:', e));
+        }
+
+        function emitWatchSync(data) {
+            if (socket) {
+                socket.emit('watch-sync', roomId, data);
+            }
+        }
+
+        function handleIncomingWatchSync(senderId, data) {
+            isSyncing = true;
+            const badge = document.getElementById('shared-player-badge');
+            if (badge) {
+                badge.innerText = 'Sincronizando...';
+                setTimeout(() => { if (badge) badge.innerText = 'Sincronizado'; }, 1000);
+            }
+
+            if (data.action === 'close') {
+                closeSharedVideoLocal();
+                addSystemNotice('O vídeo compartilhado foi encerrado.');
+                isSyncing = false;
+                return;
+            }
+
+            if (currentVideoType === 'youtube' && ytPlayer) {
+                try {
+                    if (data.action === 'play') {
+                        if (Math.abs(ytPlayer.getCurrentTime() - data.time) > 1.5) {
+                            ytPlayer.seekTo(data.time, true);
+                        }
+                        ytPlayer.playVideo();
+                    } else if (data.action === 'pause') {
+                        ytPlayer.seekTo(data.time, true);
+                        ytPlayer.pauseVideo();
+                    } else if (data.action === 'seek') {
+                        ytPlayer.seekTo(data.time, true);
+                    }
+                } catch(e) { console.warn(e); }
+            } else if (currentVideoType === 'direct') {
+                const player = document.getElementById('html5-shared-player');
+                try {
+                    if (Math.abs(player.currentTime - data.time) > 1.5) {
+                        player.currentTime = data.time;
+                    }
+                    if (data.action === 'play') {
+                        player.play().catch(e => {});
+                    } else if (data.action === 'pause') {
+                        player.pause();
+                    }
+                } catch(e) { console.warn(e); }
+            }
+
+            setTimeout(() => { isSyncing = false; }, 900);
+        }
+
+        function confirmCloseSharedVideo() {
+            if (confirm('Deseja encerrar o vídeo compartilhado e voltar apenas para as câmeras?')) {
+                if (socket) {
+                    socket.emit('watch-sync', roomId, { action: 'close' });
+                }
+                closeSharedVideoLocal();
+            }
+        }
+
+        function closeSharedVideoLocal() {
+            isWatchActive = false;
+            const btn = document.getElementById('btn-watch');
+            if (btn) btn.classList.remove('btn-watch-active');
+
+            const wrap = document.getElementById('shared-player-wrap');
+            if (wrap) wrap.classList.remove('active');
+
+            const html5Player = document.getElementById('html5-shared-player');
+            if (html5Player) {
+                html5Player.pause();
+                html5Player.src = '';
+            }
+            if (ytPlayer && typeof ytPlayer.destroy === 'function') {
+                try { ytPlayer.destroy(); } catch(e) {}
+                ytPlayer = null;
+            }
+            const ytTarget = document.getElementById('yt-player-target');
+            if (ytTarget) ytTarget.innerHTML = '';
+        }
+
+        function addSystemNotice(text) {
+            const nickEl = document.getElementById('remote-nickname');
+            if (nickEl) {
+                const prev = nickEl.innerText;
+                nickEl.innerText = text;
+                setTimeout(() => { if (nickEl.innerText === text) nickEl.innerText = prev; }, 4000);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const saved = localStorage.getItem('user_nickname');
+                if (saved) {
+                    const input = document.getElementById('nickname-input');
+                    if (input) input.value = saved;
+                }
+            } catch(e) {}
+        });
+
         function leaveRoom() {
+            closeSharedVideoLocal();
+            if (activeOutgoingInvite && socket) {
+                cancelWatchInvite();
+            }
             if(peer) peer.close();
             document.getElementById('remoteVideo').srcObject = null;
             document.getElementById('messages').innerHTML = "";
             document.getElementById('screen-call').classList.remove('active');
             document.getElementById('screen-initial').classList.add('active');
+            hasJoined = false;
         }
     </script>
 </body>
