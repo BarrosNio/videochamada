@@ -72,6 +72,21 @@ io.on('connection', (socket) => {
     socket.to(roomId).emit('chat-message', messageData);
   });
 
+  // ==========================================
+  // RECURSO ASSISTIR JUNTOS (WATCH TOGETHER)
+  // ==========================================
+  socket.on('watch-invite', (roomId, data) => {
+    socket.to(roomId).emit('watch-invite', socket.id, data);
+  });
+
+  socket.on('watch-response', (roomId, data) => {
+    socket.to(roomId).emit('watch-response', socket.id, data);
+  });
+
+  socket.on('watch-sync', (roomId, data) => {
+    socket.to(roomId).emit('watch-sync', socket.id, data);
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
