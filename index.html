@@ -82,118 +82,285 @@
             color: #a5b4fc; display: flex; justify-content: space-between; cursor: pointer; margin-top: 8px;
         }
 
-        /* Video Area */
-        #screen-call { background: var(--bg-dark); position: relative; justify-content: flex-end; }
-
-        .video-wrapper {
-            position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;
-            display: flex; align-items: center; justify-content: center; background: #000;
+        /* ===================================================
+           CALL SCREEN BASE & LAYOUTS (SCREENS 1 & 4)
+           =================================================== */
+        #screen-call {
+            background: var(--bg-dark);
+            position: absolute; inset: 0; width: 100%; height: 100dvh;
+            overflow: hidden;
+            display: none;
         }
-        #remoteVideo {
-            width: 100%; height: 100%; object-fit: cover;
-        }
-        
-        .video-overlay {
-            position: absolute; inset: 0; z-index: 2; pointer-events: none;
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 40%, transparent 100%);
-        }
-
-        .pip-video {
-            position: absolute; top: 20px; right: 20px; 
-            width: 90px; height: 135px; background: #000;
-            border-radius: 16px; overflow: hidden; z-index: 20;
-            border: 2px solid rgba(255,255,255,0.2);
-            transform: scaleX(-1);
-        }
-        .pip-video video { width: 100%; height: 100%; object-fit: cover; }
-
-        .call-header {
-            position: absolute; top: 20px; left: 20px; z-index: 20;
-            display: flex; align-items: center; gap: 10px;
-            background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px;
-        }
-
-        .ui-layer {
-            position: absolute; inset: 0; z-index: 9999; 
-            display: flex; flex-direction: column; justify-content: flex-end;
-            pointer-events: none;
-        }
-
-        .chat-scroll-area {
-            position: absolute;
-            left: 6%;
-            bottom: clamp(140px, 20%, 185px);
-            width: 44%;
-            max-width: 45%;
-            max-height: clamp(130px, 22dvh, 185px);
-            overflow-y: auto;
-            pointer-events: auto;
+        #screen-call.active {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            z-index: 25;
-            padding: 2px;
-            margin: 0;
+            justify-content: flex-end;
+        }
+
+        /* HEADER (SCREENS 1 & 4) */
+        .call-header {
+            position: absolute; top: 16px; left: 16px; right: 16px; z-index: 25;
+            display: flex; align-items: center; justify-content: space-between;
+            pointer-events: auto;
+        }
+        .call-contact-info {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(12px);
+            padding: 6px 14px 6px 8px; border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .contact-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            object-fit: cover; border: 1.5px solid rgba(255, 255, 255, 0.4);
+            background: #222;
+        }
+        .contact-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.2; }
+        .contact-timer { font-size: 11px; font-weight: 500; color: #cbd5e1; font-family: monospace; }
+        .call-header-actions {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .header-icon-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff; font-size: 20px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .header-icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* OVERLAY GRADIENT FOR NORMAL CALL */
+        .video-overlay {
+            position: absolute; inset: 0; z-index: 2; pointer-events: none;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 35%, transparent 100%);
+        }
+
+        /* ===================================================
+           MODE 1: NORMAL CALL (SCREEN 1)
+           =================================================== */
+        #screen-call:not(.watch-mode-active) .cameras-container {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            z-index: 1; pointer-events: none;
+        }
+        #screen-call:not(.watch-mode-active) #remoteVideoBox {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            background: #000;
+        }
+        #screen-call:not(.watch-mode-active) #remoteVideo {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        #screen-call:not(.watch-mode-active) #localVideoBox {
+            position: absolute; bottom: 120px; right: 16px;
+            width: 105px; height: 150px; border-radius: 18px;
+            overflow: hidden; z-index: 20;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.65);
+            pointer-events: auto; background: #000;
+        }
+        #screen-call:not(.watch-mode-active) #localVideo {
+            width: 100%; height: 100%; object-fit: cover;
+            transform: scaleX(-1);
+        }
+        #screen-call:not(.watch-mode-active) #shared-player-wrap {
+            display: none !important;
+        }
+        #screen-call:not(.watch-mode-active) #messages {
+            position: absolute; left: 16px; bottom: 110px;
+            width: 52%; max-width: 250px;
+            max-height: clamp(140px, 24dvh, 210px);
+            overflow-y: auto; pointer-events: auto;
+            display: flex; flex-direction: column; gap: 8px;
+            z-index: 25; padding: 2px; margin: 0;
             scroll-behavior: smooth;
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
             mask-image: linear-gradient(to bottom, transparent 0%, black 15%);
         }
-        .chat-scroll-area::-webkit-scrollbar { display: none; }
+        #screen-call:not(.watch-mode-active) .bottom-ui-area {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            z-index: 30; pointer-events: auto;
+            display: flex; flex-direction: column; gap: 8px;
+            padding: 8px 12px; padding-bottom: var(--safe-bottom);
+        }
 
+        /* ===================================================
+           MODE 2: WATCH TOGETHER (SCREEN 4)
+           =================================================== */
+        #screen-call.watch-mode-active {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            height: 100dvh;
+            background: #07070a;
+            overflow: hidden;
+        }
+        #screen-call.watch-mode-active .call-header {
+            position: relative !important;
+            top: auto !important; left: auto !important; right: auto !important;
+            width: 100%; border-radius: 0;
+            background: rgba(10, 10, 16, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 30; padding: 8px 16px; flex-shrink: 0;
+        }
+        #screen-call.watch-mode-active .video-overlay {
+            display: none !important;
+        }
+        .shared-player-header {
+            display: none !important;
+        }
+        #screen-call.watch-mode-active #shared-player-wrap {
+            display: block !important;
+            position: relative !important;
+            top: auto !important; left: auto !important;
+            transform: none !important;
+            width: 100%; max-width: 100%;
+            aspect-ratio: 16/9; max-height: 38dvh;
+            border-radius: 0; border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+            z-index: 20; flex-shrink: 0; background: #000;
+        }
+        #screen-call.watch-mode-active .cameras-container {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 12px;
+            padding: 10px 16px;
+            width: 100%;
+            flex-shrink: 0;
+            z-index: 15;
+            position: relative !important;
+            inset: auto !important;
+            pointer-events: auto !important;
+        }
+        #screen-call.watch-mode-active #remoteVideoBox,
+        #screen-call.watch-mode-active #localVideoBox {
+            position: relative !important;
+            inset: auto !important; bottom: auto !important; right: auto !important;
+            flex: 1; max-width: 165px;
+            aspect-ratio: 4/5;
+            max-height: 155px;
+            border-radius: 18px; overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            background: #000; pointer-events: auto !important;
+        }
+        #screen-call.watch-mode-active #remoteVideo,
+        #screen-call.watch-mode-active #localVideo {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        #screen-call.watch-mode-active #localVideo {
+            transform: scaleX(-1);
+        }
+        #screen-call.watch-mode-active #messages {
+            position: relative !important;
+            left: auto !important; bottom: auto !important;
+            width: 100%; max-width: 100%;
+            max-height: none !important; flex: 1;
+            overflow-y: auto; padding: 4px 16px;
+            display: flex; flex-direction: column; gap: 7px;
+            z-index: 10; margin: 0;
+            -webkit-mask-image: none; mask-image: none;
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        #messages::-webkit-scrollbar { display: none; }
+        #screen-call.watch-mode-active .bottom-ui-area {
+            position: relative !important;
+            bottom: auto !important; left: auto !important; right: auto !important;
+            background: rgba(10, 10, 16, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0; padding-bottom: var(--safe-bottom);
+        }
+
+        .video-name-badge {
+            display: none !important;
+        }
+
+        /* CHAT BUBBLES (MATCHING USER REFERENCE DESIGN) */
         .chat-bubble {
-            background: rgba(20, 20, 25, 0.75);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 8px 12px;
-            border-radius: 16px;
+            background: #ffffff;
+            color: #0f172a;
+            border: none;
+            padding: 8px 14px; border-radius: 16px;
             border-bottom-left-radius: 4px;
-            color: #fff;
-            width: fit-content;
-            max-width: 100%;
-            align-self: flex-start;
-            pointer-events: auto;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+            width: fit-content; max-width: 85%;
+            align-self: flex-start; pointer-events: auto;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
         }
         .chat-bubble.mine {
-            background: rgba(99, 102, 241, 0.45);
-            border: 1px solid rgba(99, 102, 241, 0.35);
-            border-bottom-left-radius: 4px;
-            border-bottom-right-radius: 16px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: #ffffff;
+            border: none;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 4px;
+            align-self: flex-start;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+        }
+        #screen-call.watch-mode-active .chat-bubble.mine {
             align-self: flex-start;
         }
+        .msg-sender { font-size: 11px; font-weight: 700; color: #ec4899; margin-bottom: 2px; }
+        .msg-original { font-weight: 600; font-size: 13.5px; line-height: 1.35; color: #0f172a; word-break: break-word; }
+        .chat-bubble.mine .msg-original { color: #ffffff; }
+        .msg-translated { font-size: 11px; color: #64748b; margin-top: 2px; line-height: 1.25; word-break: break-word; }
+        .chat-bubble.mine .msg-translated { color: rgba(255, 255, 255, 0.85); }
+        .msg-time { font-size: 10px; font-weight: 500; color: #94a3b8; margin-left: 8px; white-space: nowrap; }
+        .chat-bubble.mine .msg-time { color: rgba(255, 255, 255, 0.7); }
 
-        .msg-original { font-weight: 600; font-size: 13.5px; line-height: 1.35; color: #fff; word-break: break-word;}
-        .msg-translated { font-size: 11.5px; color: rgba(255,255,255,0.82); margin-top: 2px; line-height: 1.25; word-break: break-word;}
-        .msg-tag { font-size: 9px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-top: 4px; letter-spacing: 1px;}
-
-        .bottom-ui-area {
-            flex-shrink: 0; pointer-events: auto;
-            display: flex; flex-direction: column; gap: 12px;
-            padding: 10px 15px; padding-bottom: var(--safe-bottom);
+        /* ===================================================
+           CONTROLS BAR WITH 5 LABELED BUTTONS
+           =================================================== */
+        .call-controls-bar {
+            display: flex; justify-content: space-around; align-items: flex-end;
+            width: 100%; max-width: 480px; margin: 0 auto;
+            padding: 4px 6px;
         }
-
-        .controls-row { display: flex; justify-content: center; gap: 20px; }
+        .control-item {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            cursor: pointer; user-select: none;
+        }
         .control-btn {
-            width: 48px; height: 48px; border-radius: 50%; border: none;
-            background: rgba(255,255,255,0.15); color: white; font-size: 22px;
-            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+            width: 46px; height: 46px; border-radius: 50%; border: none;
+            background: rgba(255,255,255,0.15); color: white; font-size: 21px;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px); transition: all 0.2s;
         }
-        .control-btn.btn-end { background: rgba(239, 68, 68, 0.8); }
+        .control-btn.btn-end {
+            background: #ef4444; width: 54px; height: 54px; font-size: 24px;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.45);
+        }
+        .control-btn.btn-watch-trigger {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 16px;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        }
+        .control-btn.btn-watch-stop {
+            background: #252836 !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+        }
+        .control-label {
+            font-size: 11px; color: #cbd5e1; font-weight: 500;
+        }
 
+        /* CHAT INPUT DRAWER */
+        #chat-input-drawer {
+            display: none; width: 100%; max-width: 480px; margin: 0 auto 6px auto;
+        }
         .input-row {
-            display: flex; background: rgba(20,20,25,0.9);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
-            padding: 6px 12px; align-items: center; gap: 10px; position: relative;
+            display: flex; width: 100%; background: rgba(18, 18, 26, 0.95);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
+            padding: 6px 12px; align-items: center; gap: 8px; position: relative;
         }
-        .input-row input { flex: 1; min-width: 0; background: transparent; border: none; color: #fff; outline: none; }
-        
+        .input-row input { flex: 1; min-width: 0; background: transparent; border: none; color: #fff; outline: none; font-size: 14px; }
         .translate-select {
-            background: transparent; color: #fff; width: 60px; outline: none; border: none; font-size: 12px; font-weight: bold;
+            background: transparent; color: #fff; width: 58px; outline: none; border: none; font-size: 11px; font-weight: bold;
         }
-        .translate-select option { background: #101018; color: #fff;}
-
-        .btn-icon-small { background: transparent; color: rgba(255,255,255,0.7); font-size: 24px; border: none; }
-        .btn-send { background: #6366f1; color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; }
+        .translate-select option { background: #101018; color: #fff; }
+        .btn-icon-small { background: transparent; color: rgba(255,255,255,0.7); font-size: 22px; border: none; cursor: pointer; }
+        .btn-send { background: #6366f1; color: #fff; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; }
 
         .emoji-picker {
             position: absolute; bottom: calc(100% + 10px); left: 0; right: 0;
@@ -202,49 +369,92 @@
         }
         .emoji-picker.show { display: flex; }
 
-        #wink-overlay {
-            position: absolute; inset: 0; z-index: 10000; pointer-events: none; 
-            display: none; align-items: center; justify-content: center;
-        }
-        .wink-item { font-size: 140px; animation: pop 1.5s ease-out forwards; text-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        @keyframes pop {
-            0% { transform: scale(0.1) rotate(-15deg); opacity: 0; }
-            40% { transform: scale(1.3) rotate(10deg); opacity: 1; }
-            70% { transform: scale(0.9) rotate(0deg); opacity: 1; }
-            100% { transform: scale(1) rotate(0deg); opacity: 0; }
-        }
-
-        @media (min-width: 1024px) {
-            .app-screen { align-items: center; justify-content: center; }
-            .auth-container { max-width: 450px; }
-            .video-wrapper { max-width: 1200px; margin: 0 auto; border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); }
-            #remoteVideo { object-fit: contain; }
-            .ui-layer { max-width: 1200px; margin: 0 auto; left: 0; right: 0; }
-            .chat-scroll-area { width: 38%; max-width: 420px; left: 40px; bottom: 175px; }
-        }
-
-        /* RECURSO ASSISTIR JUNTOS (WATCH TOGETHER) */
-        .control-btn.btn-watch-active {
-            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%) !important;
-            color: #fff !important;
-            box-shadow: 0 0 20px rgba(236, 72, 153, 0.7);
-        }
-
+        /* ===================================================
+           SCREEN 2: BOTTOM SHEET (ESCOLHER VÍDEO)
+           =================================================== */
         .watch-modal-overlay {
             position: absolute; inset: 0; z-index: 10002;
-            background: rgba(5, 5, 10, 0.82); backdrop-filter: blur(10px);
-            display: none; align-items: center; justify-content: center;
-            padding: 18px; pointer-events: auto;
+            background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(8px);
+            display: none; align-items: flex-end; justify-content: center;
+            pointer-events: auto;
         }
         .watch-modal-overlay.show { display: flex; }
 
-        .watch-card {
-            background: rgba(18, 18, 26, 0.98);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 24px; padding: 22px 20px;
-            width: 100%; max-width: 440px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(99, 102, 241, 0.2);
+        .watch-bottom-sheet {
+            width: 100%; max-width: 480px;
+            background: #ffffff; color: #0f172a;
+            border-radius: 28px 28px 0 0;
+            padding: 22px 20px 28px 20px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.65);
             display: flex; flex-direction: column; gap: 14px;
+            animation: sheetSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes sheetSlideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .sheet-tab-btn {
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 10px 14px; border-radius: 12px;
+            background: #f1f5f9; border: 1.5px solid #e2e8f0;
+            color: #475569; font-size: 13.5px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .sheet-tab-btn.active {
+            background: #ffffff; border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); color: #0f172a;
+        }
+
+        .sheet-input {
+            width: 100%; background: #f8fafc; border: 1.5px solid #e2e8f0;
+            border-radius: 14px; padding: 13px 40px 13px 14px;
+            font-size: 14px; color: #0f172a; outline: none; transition: border-color 0.2s;
+        }
+        .sheet-input:focus { border-color: #7c3aed; background: #ffffff; }
+
+        .sheet-clear-btn {
+            position: absolute; right: 12px;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #e2e8f0; color: #64748b; border: none;
+            display: none; align-items: center; justify-content: center;
+            font-size: 11px; cursor: pointer;
+        }
+
+        .sheet-chip {
+            background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569;
+            padding: 5px 11px; border-radius: 16px; font-size: 11.5px; font-weight: 500;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .sheet-chip:hover { background: #e2e8f0; color: #0f172a; }
+
+        .sheet-continue-btn {
+            width: 100%; margin-top: 14px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+            color: #ffffff; font-size: 16px; font-weight: 700;
+            padding: 15px; border-radius: 16px; border: none; cursor: pointer;
+            box-shadow: 0 4px 18px rgba(124, 58, 237, 0.35);
+            transition: transform 0.15s, opacity 0.15s;
+        }
+        .sheet-continue-btn:active { transform: scale(0.98); }
+
+        /* ===================================================
+           SCREEN 3: CONVITE MODAL (RECEBIMENTO)
+           =================================================== */
+        .watch-invite-overlay {
+            position: absolute; inset: 0; z-index: 10003;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center;
+            padding: 16px; pointer-events: auto;
+        }
+        .watch-invite-overlay.show { display: flex; }
+
+        .watch-invite-card {
+            background: rgba(22, 23, 34, 0.97); backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 24px; padding: 26px 22px;
+            width: 100%; max-width: 350px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
             animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
         }
         @keyframes modalPop {
@@ -252,49 +462,28 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        .tab-btn {
-            flex: 1; padding: 10px 12px; border-radius: 12px; font-weight: 600; font-size: 13px;
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-            color: #94a3b8; cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
+        .invite-btn-accept {
+            flex: 1; background: #00c853; color: #ffffff;
+            font-size: 15px; font-weight: 700; padding: 12px;
+            border-radius: 14px; border: none; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 200, 83, 0.35);
+            transition: opacity 0.15s;
         }
-        .tab-btn.active {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            color: #fff; border-color: transparent;
-            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
-        }
-
-        .preset-chip {
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-            padding: 5px 11px; border-radius: 20px; font-size: 11.5px; color: #cbd5e1;
-            cursor: pointer; transition: all 0.2s; white-space: nowrap; user-select: none;
-        }
-        .preset-chip:hover {
-            background: rgba(99, 102, 241, 0.35); border-color: rgba(99, 102, 241, 0.6); color: #fff;
+        .invite-btn-decline {
+            flex: 1; background: #2b2e3d; color: #e2e8f0;
+            font-size: 15px; font-weight: 600; padding: 12px;
+            border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer; transition: opacity 0.15s;
         }
 
-        /* SHARED PLAYER WRAPPER */
-        #shared-player-wrap {
-            position: absolute;
-            top: 75px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 760px;
-            background: #000; border-radius: 20px; overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 35px rgba(99, 102, 241, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            z-index: 18; display: none; flex-direction: column;
-            pointer-events: auto;
-        }
-        #shared-player-wrap.active { display: flex; }
-
+        /* SHARED PLAYER HEADER & BOX */
         .shared-player-header {
             background: rgba(14, 14, 20, 0.96);
-            padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            font-size: 12px;
+            padding: 7px 14px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 12px;
         }
-
         .player-video-box {
-            position: relative; width: 100%; aspect-ratio: 16/9; background: #000;
+            position: relative; width: 100%; height: 100%; aspect-ratio: 16/9; background: #000;
         }
         .player-video-box iframe, .player-video-box video {
             position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; border: none;
@@ -313,6 +502,24 @@
             pointer-events: auto;
         }
         .watch-toast.show { display: flex; }
+
+        #wink-overlay {
+            position: absolute; inset: 0; z-index: 10000; pointer-events: none; 
+            display: none; align-items: center; justify-content: center;
+        }
+        .wink-item { font-size: 140px; animation: pop 1.5s ease-out forwards; text-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        @keyframes pop {
+            0% { transform: scale(0.1) rotate(-15deg); opacity: 0; }
+            40% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+            70% { transform: scale(0.9) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 0; }
+        }
+
+        @media (min-width: 1024px) {
+            .app-screen { align-items: center; justify-content: center; }
+            .auth-container { max-width: 450px; }
+            .call-controls-bar { max-width: 540px; }
+        }
     </style>
 </head>
 
@@ -348,59 +555,53 @@
 
     <!-- CALL SCREEN -->
     <div id="screen-call" class="app-screen">
-        <div class="video-wrapper">
-            <video id="remoteVideo" autoplay playsinline></video>
-            <div class="video-overlay"></div>
-            
-            <div class="pip-video glass-panel p-0 border-0">
-                <video id="localVideo" autoplay muted playsinline></video>
-            </div>
-            
-            <div class="call-header glass-panel">
-                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <div class="flex flex-col ml-2">
-                    <span id="remote-nickname" class="text-sm font-bold text-gray-300">Aguardando amigo...</span>
+        <!-- HEADER (SCREENS 1 & 4) -->
+        <div class="call-header">
+            <div class="call-contact-info">
+                <img src="capa.png" class="contact-avatar" alt="Avatar">
+                <div class="flex flex-col">
+                    <span id="remote-nickname" class="contact-name">Jessica ❤️</span>
+                    <span id="call-timer" class="contact-timer">00:00:00</span>
                 </div>
             </div>
-
-            <!-- SHARED WATCH TOGETHER PLAYER -->
-            <div id="shared-player-wrap">
-                <div class="shared-player-header">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></span>
-                        <span class="font-bold text-gray-200" id="shared-player-title">Assistindo Juntos</span>
-                        <span class="text-[10px] text-gray-400 bg-white/10 px-2 py-0.5 rounded-full" id="shared-player-badge">Sincronizado</span>
-                    </div>
-                    <button class="bg-red-500/20 hover:bg-red-500/40 text-red-300 px-2.5 py-1 rounded-lg text-xs font-semibold transition" onclick="confirmCloseSharedVideo()">
-                        ✕ Fechar Vídeo
-                    </button>
-                </div>
-                <div class="player-video-box">
-                    <div id="yt-player-target"></div>
-                    <video id="html5-shared-player" controls playsinline style="display:none;"></video>
-                </div>
+            <div class="call-header-actions">
+                <button class="header-icon-btn" onclick="toggleCamFacing()" title="Inverter Câmera">
+                    <ion-icon name="camera-reverse-outline"></ion-icon>
+                </button>
+                <button class="header-icon-btn" title="Opções">
+                    <ion-icon name="ellipsis-vertical"></ion-icon>
+                </button>
             </div>
-
-            <div id="messages" class="chat-scroll-area"></div>
         </div>
 
-        <div class="ui-layer">
-            <div class="bottom-ui-area">
-                <div class="controls-row">
-                    <button class="control-btn" id="btn-mic" onclick="toggleMic()" title="Microfone">
-                        <ion-icon name="mic-outline"></ion-icon>
-                    </button>
-                    <button class="control-btn" id="btn-watch" onclick="toggleWatchModal()" title="Assistir Vídeo Junto">
-                        <ion-icon name="film-outline"></ion-icon>
-                    </button>
-                    <button class="control-btn btn-end" onclick="leaveRoom()" title="Encerrar Chamada">
-                        <ion-icon name="call"></ion-icon>
-                    </button>
-                    <button class="control-btn" id="btn-cam" onclick="toggleCam()" title="Câmera">
-                        <ion-icon name="videocam-outline"></ion-icon>
-                    </button>
-                </div>
+        <!-- SHARED WATCH TOGETHER PLAYER (SECTION A - SCREEN 4) -->
+        <div id="shared-player-wrap">
+            <div class="player-video-box">
+                <div id="yt-player-target"></div>
+                <video id="html5-shared-player" controls playsinline style="display:none;"></video>
+            </div>
+        </div>
 
+        <!-- CAMERAS CONTAINER (SECTION B - SCREENS 1 & 4) -->
+        <div class="cameras-container" id="cameras-container">
+            <div id="remoteVideoBox" class="video-box remote-box">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="video-overlay"></div>
+                <div class="video-name-badge" id="remote-badge-label">Jessica</div>
+            </div>
+            <div id="localVideoBox" class="video-box local-box">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="video-name-badge">Você</div>
+            </div>
+        </div>
+
+        <!-- CHAT MESSAGES STREAM (SECTION C - SCREENS 1 & 4) -->
+        <div id="messages" class="chat-scroll-area"></div>
+
+        <!-- BOTTOM UI & CONTROLS (SECTION D - SCREENS 1 & 4) -->
+        <div class="bottom-ui-area">
+            <!-- DRAWER DE INPUT DE CHAT -->
+            <div id="chat-input-drawer">
                 <div class="input-row z-30">
                     <select id="lang-select" class="translate-select" title="Auto Translate To">
                         <option value="pt">PT-BR</option>
@@ -427,8 +628,46 @@
                     <button class="btn-send" onclick="send()"><ion-icon name="send"></ion-icon></button>
                 </div>
             </div>
+
+            <!-- CONTROLS ROW (5 BOTÕES COM LABELS) -->
+            <div class="call-controls-bar">
+                <div class="control-item" onclick="toggleMic()">
+                    <button class="control-btn" id="btn-mic" title="Microfone">
+                        <ion-icon name="mic-outline"></ion-icon>
+                    </button>
+                    <span class="control-label">Microfone</span>
+                </div>
+
+                <div class="control-item" onclick="toggleCam()">
+                    <button class="control-btn" id="btn-cam" title="Câmera">
+                        <ion-icon name="videocam-outline"></ion-icon>
+                    </button>
+                    <span class="control-label">Câmera</span>
+                </div>
+
+                <div class="control-item" onclick="leaveRoom()">
+                    <button class="control-btn btn-end" title="Encerrar">
+                        <ion-icon name="call"></ion-icon>
+                    </button>
+                    <span class="control-label">Encerrar</span>
+                </div>
+
+                <div class="control-item" onclick="toggleChatInput()">
+                    <button class="control-btn" id="btn-chat-toggle" title="Chat">
+                        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                    </button>
+                    <span class="control-label">Chat</span>
+                </div>
+
+                <div class="control-item" onclick="handleWatchButtonClick()">
+                    <button class="control-btn btn-watch-trigger" id="btn-watch-icon" title="Assistir Vídeo">
+                        <ion-icon id="watch-icon-glyph" name="videocam"></ion-icon>
+                    </button>
+                    <span class="control-label" id="btn-watch-label">Assistir Vídeo</span>
+                </div>
+            </div>
         </div>
-        
+
         <!-- STATUS TOAST CONVITE ENVIADO -->
         <div id="watch-status-toast" class="watch-toast">
             <span id="watch-toast-text">⏳ Convite enviado! Aguardando resposta...</span>
@@ -437,109 +676,81 @@
             </button>
         </div>
 
-        <!-- MODAL ESCOLHER VÍDEO -->
+        <!-- MODAL ESCOLHER VÍDEO (BOTTOM SHEET ESTILO SCREEN 2) -->
         <div id="watch-modal" class="watch-modal-overlay">
-            <div class="watch-card">
-                <div class="flex items-center justify-between pb-2 border-b border-white/10">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md">
-                            <ion-icon name="film" style="font-size: 19px;"></ion-icon>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-white">Assistir Vídeos Juntos</h3>
-                            <p class="text-xs text-gray-400">Escolha o vídeo e convide para sincronizar</p>
-                        </div>
-                    </div>
-                    <button class="text-gray-400 hover:text-white text-xl p-1 leading-none" onclick="closeWatchModal()">✕</button>
+            <div class="watch-bottom-sheet">
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                    <h3 class="text-base font-bold text-gray-900">Assistir vídeo juntos</h3>
+                    <button class="text-gray-400 hover:text-gray-700 text-xl font-bold p-1 leading-none" onclick="closeWatchModal()">✕</button>
                 </div>
 
                 <!-- Tabs Origem -->
-                <div class="flex gap-2">
-                    <button id="tab-yt" class="tab-btn active" onclick="switchWatchTab('yt')">
-                        <ion-icon name="logo-youtube" class="text-red-500 text-base"></ion-icon>
-                        YouTube
+                <div class="flex gap-2.5 mt-2">
+                    <button id="tab-yt" class="sheet-tab-btn active" onclick="switchWatchTab('yt')">
+                        <ion-icon name="logo-youtube" class="text-red-600 text-lg"></ion-icon>
+                        <span>YouTube</span>
                     </button>
-                    <button id="tab-web" class="tab-btn" onclick="switchWatchTab('web')">
-                        <ion-icon name="globe-outline" class="text-blue-400 text-base"></ion-icon>
-                        Meu Site / Link
+                    <button id="tab-web" class="sheet-tab-btn" onclick="switchWatchTab('web')">
+                        <ion-icon name="link-outline" class="text-gray-600 text-lg"></ion-icon>
+                        <span>Meu site</span>
                     </button>
                 </div>
 
                 <!-- Painel YouTube -->
-                <div id="panel-yt" class="flex flex-col gap-3">
-                    <div>
-                        <label class="text-xs font-semibold text-gray-300 block mb-1">Link ou ID do YouTube:</label>
-                        <input type="text" id="yt-url-input" class="premium-input text-sm p-3" placeholder="https://www.youtube.com/watch?v=...">
+                <div id="panel-yt" class="flex flex-col gap-2.5 mt-3">
+                    <div class="relative flex items-center">
+                        <input type="text" id="yt-url-input" class="sheet-input" placeholder="Cole o link do YouTube aqui..." oninput="updateClearBtn('yt')">
+                        <button id="btn-clear-yt" class="sheet-clear-btn" onclick="clearInput('yt-url-input')">✕</button>
                     </div>
                     <div>
-                        <span class="text-[11px] text-gray-400 block mb-1.5 font-medium">Sugestões Rápidas:</span>
-                        <div class="flex flex-wrap gap-2">
-                            <span class="preset-chip" onclick="setPresetYt('jfKfPfyJRdk', 'Lofi Hip Hop Chill')">🎵 Lofi Chill</span>
-                            <span class="preset-chip" onclick="setPresetYt('aqz-KE-bpKQ', 'Big Buck Bunny (Animação)')">🐰 Big Buck Bunny</span>
-                            <span class="preset-chip" onclick="setPresetYt('Bey4XXJAqS8', 'Paisagens 4K Relaxante')">🌄 Natureza 4K</span>
+                        <span class="text-[11px] text-gray-500 block mb-1 font-medium">Sugestões rápidas:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="sheet-chip" onclick="setPresetYt('jfKfPfyJRdk', 'Lofi Chill')">🎵 Lofi Chill</span>
+                            <span class="sheet-chip" onclick="setPresetYt('aqz-KE-bpKQ', 'Big Buck Bunny')">🐰 Big Buck Bunny</span>
+                            <span class="sheet-chip" onclick="setPresetYt('Bey4XXJAqS8', 'Natureza 4K')">🌄 Natureza 4K</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Painel Web / Meu Site -->
-                <div id="panel-web" class="flex flex-col gap-3" style="display: none;">
-                    <div>
-                        <label class="text-xs font-semibold text-gray-300 block mb-1">URL Direta do Vídeo (.mp4 / .webm):</label>
-                        <input type="text" id="web-url-input" class="premium-input text-sm p-3" placeholder="https://meusite.com/video.mp4">
+                <div id="panel-web" class="flex flex-col gap-2.5 mt-3" style="display: none;">
+                    <div class="relative flex items-center">
+                        <input type="text" id="web-url-input" class="sheet-input" placeholder="Cole o link do vídeo (MP4/WebM)..." oninput="updateClearBtn('web')">
+                        <button id="btn-clear-web" class="sheet-clear-btn" onclick="clearInput('web-url-input')">✕</button>
                     </div>
                     <div>
-                        <span class="text-[11px] text-gray-400 block mb-1.5 font-medium">Amostras Disponíveis:</span>
-                        <div class="flex flex-wrap gap-2">
-                            <span class="preset-chip" onclick="setPresetWeb('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 'Big Buck Bunny (MP4)')">🎬 Amostra MP4 Google</span>
-                            <span class="preset-chip" onclick="setPresetWeb('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', 'Elephants Dream (MP4)')">🐘 Elephants Dream</span>
+                        <span class="text-[11px] text-gray-500 block mb-1 font-medium">Amostras disponíveis:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="sheet-chip" onclick="setPresetWeb('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 'Big Buck Bunny')">🎬 Amostra MP4</span>
+                            <span class="sheet-chip" onclick="setPresetWeb('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', 'Elephants Dream')">🐘 Elephants Dream</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Botões Ação -->
-                <div class="flex gap-2 pt-2 border-t border-white/10">
-                    <button class="premium-btn-alt flex-1 py-3 text-sm rounded-xl" onclick="closeWatchModal()">
-                        Cancelar
-                    </button>
-                    <button class="premium-btn flex-1 py-3 text-sm rounded-xl" style="background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);" onclick="sendWatchInvite()">
-                        <ion-icon name="paper-plane-outline"></ion-icon>
-                        Enviar Convite
-                    </button>
-                </div>
+                <button class="sheet-continue-btn" onclick="sendWatchInvite()">
+                    Continuar
+                </button>
             </div>
         </div>
 
-        <!-- MODAL CONVITE RECEBIDO -->
-        <div id="watch-invite-modal" class="watch-modal-overlay">
-            <div class="watch-card text-center" style="max-width: 390px;">
-                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center mx-auto text-white text-2xl shadow-lg shadow-pink-500/30">
-                    <ion-icon name="film"></ion-icon>
+        <!-- MODAL CONVITE RECEBIDO (ESTILO SCREEN 3) -->
+        <div id="watch-invite-modal" class="watch-invite-overlay">
+            <div class="watch-invite-card">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center mx-auto text-white text-2xl shadow-lg shadow-purple-500/30 mb-3">
+                    <ion-icon name="videocam"></ion-icon>
                 </div>
-                <div>
-                    <h3 class="text-lg font-bold text-white mb-1">Convite para Assistir Juntos!</h3>
-                    <p class="text-sm text-gray-300 leading-relaxed" id="watch-invite-message">
-                        Seu parceiro está te convidando para assistir a um vídeo junto com ele. Deseja participar?
-                    </p>
-                </div>
+                
+                <p class="text-[15px] text-gray-200 leading-snug mb-5">
+                    <strong id="watch-invite-sender" class="text-white font-bold">Aldieris</strong> está te convidando para assistir um vídeo junto com ele.<br><br>
+                    <span class="text-gray-300 text-sm">Deseja participar?</span>
+                </p>
 
-                <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-left flex items-center gap-3">
-                    <div id="watch-invite-icon" class="text-red-500 text-2xl flex-shrink-0">
-                        <ion-icon name="logo-youtube"></ion-icon>
-                    </div>
-                    <div class="overflow-hidden">
-                        <div class="text-[10px] text-gray-400 uppercase font-semibold" id="watch-invite-type">Vídeo Compartilhado</div>
-                        <div class="text-xs font-bold text-white truncate" id="watch-invite-title">Vídeo Selecionado</div>
-                    </div>
-                </div>
-
-                <div class="flex gap-3 pt-2">
-                    <button class="premium-btn-alt flex-1 py-3 text-sm rounded-xl bg-red-500/20 hover:bg-red-500/30 border-red-500/40 text-red-200" onclick="declineWatchInvite()">
-                        <ion-icon name="close-circle-outline"></ion-icon>
-                        Recusar
+                <div class="flex gap-2.5">
+                    <button class="invite-btn-accept" onclick="acceptWatchInvite()">
+                        Aceitar
                     </button>
-                    <button class="premium-btn flex-1 py-3 text-sm rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500" onclick="acceptWatchInvite()">
-                        <ion-icon name="checkmark-circle-outline"></ion-icon>
-                        Aceitar Convite
+                    <button class="invite-btn-decline" onclick="declineWatchInvite()">
+                        Recusar
                     </button>
                 </div>
             </div>
@@ -614,6 +825,7 @@
         function finalizeConnection() {
             document.getElementById("screen-initial").classList.remove('active');
             document.getElementById("screen-call").classList.add('active');
+            startCallTimer();
 
             if (!peer) {
                 initPeerConnection();
@@ -893,16 +1105,23 @@
             const div = document.createElement("div");
             div.className = `chat-bubble ${isMine ? 'mine' : ''}`;
             
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
             if(data.isImg) {
                 div.innerHTML = `
-                    <div class="text-[9px] uppercase tracking-widest opacity-50 mb-1">${isMine ? 'Você' : data.name}</div>
+                    ${!isMine ? `<div class="msg-sender">${data.name || 'Jessica'}</div>` : ''}
                     <img src="${data.imgData}" class="w-full rounded mt-1 shadow" style="max-height:100px; object-fit:cover;">
+                    <div class="text-right mt-1"><span class="msg-time">${timeStr}</span></div>
                 `;
             } else {
                 div.innerHTML = `
-                    <div class="text-[9px] uppercase tracking-widest opacity-50 mb-1">${isMine ? 'Você' : data.name}</div>
-                    <div class="msg-original">${data.msg}</div>
-                    <div class="msg-translated">${data.translated}</div>
+                    ${!isMine ? `<div class="msg-sender">${data.name || 'Jessica'}</div>` : ''}
+                    <div class="flex items-baseline justify-between gap-3">
+                        <span class="msg-original">${data.msg}</span>
+                        <span class="msg-time">${timeStr}</span>
+                    </div>
+                    ${data.translated && data.translated !== data.msg ? `<div class="msg-translated">${data.translated}</div>` : ''}
                 `;
             }
             
@@ -912,25 +1131,140 @@
         }
 
         // ============================================
-        // CONTROLES DE MIDIA
+        // CONTROLES DE MIDIA E SESSÃO
         // ============================================
         let isMicOn = true, isCamOn = true;
+        let currentFacingMode = "user";
+        let callTimerInterval = null;
+        let callStartTime = null;
+
+        function startCallTimer() {
+            stopCallTimer();
+            callStartTime = Date.now();
+            const timerEl = document.getElementById('call-timer');
+            if (timerEl) timerEl.innerText = '00:00:00';
+            
+            callTimerInterval = setInterval(() => {
+                if (!callStartTime) return;
+                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+                const hrs = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+                const mins = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+                const secs = String(elapsed % 60).padStart(2, '0');
+                if (timerEl) timerEl.innerText = `${hrs}:${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopCallTimer() {
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+            callStartTime = null;
+            const timerEl = document.getElementById('call-timer');
+            if (timerEl) timerEl.innerText = '00:00:00';
+        }
+
         function toggleMic() {
             if(!localStream) return;
             isMicOn = !isMicOn;
-            localStream.getAudioTracks()[0].enabled = isMicOn;
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) audioTrack.enabled = isMicOn;
             const btn = document.getElementById('btn-mic');
             btn.innerHTML = isMicOn ? '<ion-icon name="mic-outline"></ion-icon>' : '<ion-icon name="mic-off-outline"></ion-icon>';
             btn.style.background = isMicOn ? 'rgba(255,255,255,0.15)' : 'rgba(239, 68, 68, 0.8)';
         }
+
         function toggleCam() {
             if(!localStream) return;
             isCamOn = !isCamOn;
-            localStream.getVideoTracks()[0].enabled = isCamOn;
+            const videoTrack = localStream.getVideoTracks()[0];
+            if (videoTrack) videoTrack.enabled = isCamOn;
             const btn = document.getElementById('btn-cam');
             btn.innerHTML = isCamOn ? '<ion-icon name="videocam-outline"></ion-icon>' : '<ion-icon name="videocam-off-outline"></ion-icon>';
             btn.style.background = isCamOn ? 'rgba(255,255,255,0.15)' : 'rgba(239, 68, 68, 0.8)';
         }
+
+        async function toggleCamFacing() {
+            if (!localStream) return;
+            currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+            try {
+                const newStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentFacingMode },
+                    audio: isMicOn
+                });
+                const newVideoTrack = newStream.getVideoTracks()[0];
+                
+                if (peer) {
+                    const sender = peer.getSenders().find(s => s.track && s.track.kind === 'video');
+                    if (sender) {
+                        sender.replaceTrack(newVideoTrack);
+                    }
+                }
+                
+                const oldTrack = localStream.getVideoTracks()[0];
+                if (oldTrack) {
+                    oldTrack.stop();
+                    localStream.removeTrack(oldTrack);
+                }
+                localStream.addTrack(newVideoTrack);
+                
+                const localVid = document.getElementById("localVideo");
+                if (localVid) {
+                    localVid.srcObject = localStream;
+                    localVid.style.transform = currentFacingMode === "user" ? "scaleX(-1)" : "none";
+                }
+            } catch(err) {
+                console.warn("Erro ao inverter câmera:", err);
+            }
+        }
+
+        function toggleChatInput() {
+            const drawer = document.getElementById('chat-input-drawer');
+            const btn = document.getElementById('btn-chat-toggle');
+            if (drawer) {
+                const isShown = drawer.style.display === 'block';
+                drawer.style.display = isShown ? 'none' : 'block';
+                if (btn) {
+                    btn.style.background = isShown ? 'rgba(255,255,255,0.15)' : 'rgba(99, 102, 241, 0.8)';
+                }
+                if (!isShown) {
+                    setTimeout(() => {
+                        const input = document.getElementById('msg');
+                        if (input) input.focus();
+                    }, 100);
+                }
+            }
+        }
+
+        function handleWatchButtonClick() {
+            if (isWatchActive) {
+                confirmCloseSharedVideo();
+            } else {
+                toggleWatchModal();
+            }
+        }
+
+        function updateClearBtn(type) {
+            if (type === 'yt') {
+                const val = document.getElementById('yt-url-input').value;
+                const btn = document.getElementById('btn-clear-yt');
+                if (btn) btn.style.display = val ? 'flex' : 'none';
+            } else {
+                const val = document.getElementById('web-url-input').value;
+                const btn = document.getElementById('btn-clear-web');
+                if (btn) btn.style.display = val ? 'flex' : 'none';
+            }
+        }
+
+        function clearInput(id) {
+            const input = document.getElementById(id);
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            updateClearBtn(id.includes('yt') ? 'yt' : 'web');
+        }
+
         // ============================================
         // RECURSO ASSISTIR JUNTOS (WATCH TOGETHER)
         // ============================================
@@ -956,6 +1290,7 @@
 
         function openWatchModal() {
             document.getElementById('watch-modal').classList.add('show');
+            updateClearBtn(currentWatchSource);
         }
 
         function closeWatchModal() {
@@ -980,14 +1315,17 @@
                 panelWeb.style.display = 'flex';
                 panelYt.style.display = 'none';
             }
+            updateClearBtn(tab);
         }
 
         function setPresetYt(id, title) {
             document.getElementById('yt-url-input').value = `https://www.youtube.com/watch?v=${id}`;
+            updateClearBtn('yt');
         }
 
         function setPresetWeb(url, title) {
             document.getElementById('web-url-input').value = url;
+            updateClearBtn('web');
         }
 
         function extractYouTubeId(url) {
@@ -1061,19 +1399,9 @@
         function handleIncomingWatchInvite(senderId, data) {
             pendingWatchInvite = data;
 
-            document.getElementById('watch-invite-message').innerHTML = `
-                <strong class="text-white">${data.senderNick || 'Seu parceiro'}</strong> está te convidando para assistir a um vídeo junto com ele. Deseja participar?
-            `;
-            document.getElementById('watch-invite-type').innerText = data.videoType === 'youtube' ? 'YouTube' : 'Vídeo Web';
-            document.getElementById('watch-invite-title').innerText = data.videoTitle || data.videoUrl;
-
-            const iconEl = document.getElementById('watch-invite-icon');
-            if (data.videoType === 'youtube') {
-                iconEl.innerHTML = '<ion-icon name="logo-youtube"></ion-icon>';
-                iconEl.className = 'text-red-500 text-2xl flex-shrink-0';
-            } else {
-                iconEl.innerHTML = '<ion-icon name="globe-outline"></ion-icon>';
-                iconEl.className = 'text-blue-400 text-2xl flex-shrink-0';
+            const senderEl = document.getElementById('watch-invite-sender');
+            if (senderEl) {
+                senderEl.innerText = data.senderNick || 'Seu parceiro';
             }
 
             document.getElementById('watch-invite-modal').classList.add('show');
@@ -1141,9 +1469,31 @@
             currentVideoId = id;
             currentVideoTitle = title;
 
-            document.getElementById('btn-watch').classList.add('btn-watch-active');
-            document.getElementById('shared-player-wrap').classList.add('active');
-            document.getElementById('shared-player-title').innerText = title || (type === 'youtube' ? 'YouTube' : 'Vídeo Web');
+            // ATIVAR MODO ASSISTIR JUNTOS NO CONTAINER PRINCIPAL (ESTILO SCREEN 4)
+            const screenCall = document.getElementById('screen-call');
+            if (screenCall) screenCall.classList.add('watch-mode-active');
+
+            // ATUALIZAR 5º BOTÃO DA BARRA PARA "PARAR VÍDEO" (ESTILO SCREEN 4)
+            const watchBtn = document.getElementById('btn-watch-icon');
+            const watchGlyph = document.getElementById('watch-icon-glyph');
+            const watchLabel = document.getElementById('btn-watch-label');
+            if (watchBtn) {
+                watchBtn.classList.remove('btn-watch-trigger');
+                watchBtn.classList.add('btn-watch-stop');
+                watchBtn.title = 'Parar Vídeo';
+            }
+            if (watchGlyph) {
+                watchGlyph.setAttribute('name', 'stop');
+            }
+            if (watchLabel) {
+                watchLabel.innerText = 'Parar Vídeo';
+                watchLabel.style.color = '#cbd5e1';
+            }
+
+            const wrap = document.getElementById('shared-player-wrap');
+            if (wrap) wrap.classList.add('active');
+            const titleEl = document.getElementById('shared-player-title');
+            if (titleEl) titleEl.innerText = title || (type === 'youtube' ? 'YouTube' : 'Vídeo Web');
 
             const ytTarget = document.getElementById('yt-player-target');
             const html5Player = document.getElementById('html5-shared-player');
@@ -1297,8 +1647,27 @@
 
         function closeSharedVideoLocal() {
             isWatchActive = false;
-            const btn = document.getElementById('btn-watch');
-            if (btn) btn.classList.remove('btn-watch-active');
+            
+            // DESATIVAR MODO ASSISTIR JUNTOS NO CONTAINER PRINCIPAL (VOLTA PARA SCREEN 1)
+            const screenCall = document.getElementById('screen-call');
+            if (screenCall) screenCall.classList.remove('watch-mode-active');
+
+            // RESTAURAR 5º BOTÃO DA BARRA PARA "ASSISTIR VÍDEO" (ESTILO SCREEN 1)
+            const watchBtn = document.getElementById('btn-watch-icon');
+            const watchGlyph = document.getElementById('watch-icon-glyph');
+            const watchLabel = document.getElementById('btn-watch-label');
+            if (watchBtn) {
+                watchBtn.classList.remove('btn-watch-stop');
+                watchBtn.classList.add('btn-watch-trigger');
+                watchBtn.title = 'Assistir Vídeo';
+            }
+            if (watchGlyph) {
+                watchGlyph.setAttribute('name', 'videocam');
+            }
+            if (watchLabel) {
+                watchLabel.innerText = 'Assistir Vídeo';
+                watchLabel.style.color = '#cbd5e1';
+            }
 
             const wrap = document.getElementById('shared-player-wrap');
             if (wrap) wrap.classList.remove('active');
@@ -1337,6 +1706,7 @@
 
         function leaveRoom() {
             closeSharedVideoLocal();
+            stopCallTimer();
             if (activeOutgoingInvite && socket) {
                 cancelWatchInvite();
             }
