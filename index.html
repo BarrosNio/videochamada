@@ -15,6 +15,12 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <!-- YouTube IFrame API -->
     <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- Preload Wink Assets -->
+    <link rel="preload" as="image" href="wink-laugh.webp" type="image/webp">
+    <link rel="preload" as="image" href="wink-love.webp" type="image/webp">
+    <link rel="preload" as="image" href="wink-sad.webp" type="image/webp">
+    <link rel="preload" as="image" href="wink-cheeky.webp" type="image/webp">
+    <link rel="preload" as="image" href="wink-water.webp" type="image/webp">
 
     <style>
         :root {
@@ -504,7 +510,7 @@
         .watch-toast.show { display: flex; }
 
         #wink-overlay {
-            position: absolute; inset: 0; z-index: 10000; pointer-events: none; 
+            position: fixed; inset: 0; z-index: 100000; pointer-events: none; 
             display: none; align-items: center; justify-content: center;
         }
         .wink-item { font-size: 140px; animation: pop 1.5s ease-out forwards; text-shadow: 0 10px 40px rgba(0,0,0,0.5); }
@@ -513,6 +519,318 @@
             40% { transform: scale(1.3) rotate(10deg); opacity: 1; }
             70% { transform: scale(0.9) rotate(0deg); opacity: 1; }
             100% { transform: scale(1) rotate(0deg); opacity: 0; }
+        }
+
+        /* WINK DE RISADA (ESTILO HAHAHA!) */
+        .wink-laugh-container {
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .wink-burst-bg {
+            position: absolute;
+            width: clamp(340px, 92vw, 680px);
+            height: clamp(340px, 92vw, 680px);
+            background: radial-gradient(circle, rgba(254, 240, 138, 0.65) 0%, rgba(249, 115, 22, 0.35) 40%, rgba(239, 68, 68, 0.15) 60%, transparent 75%);
+            border-radius: 50%;
+            filter: blur(28px);
+            animation: auraPulse 3.5s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes auraPulse {
+            0% { transform: scale(0.2); opacity: 0; }
+            14% { transform: scale(1.25); opacity: 1; }
+            50% { transform: scale(1.08); opacity: 0.9; }
+            80% { transform: scale(1.15); opacity: 0.7; }
+            100% { transform: scale(1.35); opacity: 0; }
+        }
+        .wink-laugh-img {
+            position: relative;
+            width: clamp(330px, 95vw, 560px);
+            height: auto;
+            max-height: 82vh;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 35px rgba(250, 204, 21, 0.5)) brightness(1.06) contrast(1.04);
+            animation: laughWinkAnimation 3.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            user-select: none;
+            pointer-events: none;
+            z-index: 2;
+        }
+        @keyframes laughWinkAnimation {
+            0% {
+                transform: scale(0.12) rotate(-16deg);
+                opacity: 0;
+            }
+            12% {
+                transform: scale(1.16) rotate(6deg);
+                opacity: 1;
+            }
+            20% {
+                transform: scale(0.96) rotate(-4deg);
+            }
+            26% {
+                transform: scale(1.04) rotate(3deg);
+            }
+            32% {
+                transform: scale(1.0) rotate(0deg);
+            }
+            /* Balanço da gargalhada / tremor de riso */
+            38% {
+                transform: scale(1.07) translateY(-12px) rotate(-4deg);
+            }
+            44% {
+                transform: scale(0.96) translateY(8px) rotate(3deg);
+            }
+            50% {
+                transform: scale(1.08) translateY(-14px) rotate(-5deg);
+            }
+            56% {
+                transform: scale(0.95) translateY(9px) rotate(4deg);
+            }
+            62% {
+                transform: scale(1.06) translateY(-10px) rotate(-3deg);
+            }
+            68% {
+                transform: scale(0.97) translateY(6px) rotate(2deg);
+            }
+            74% {
+                transform: scale(1.04) translateY(-8px) rotate(-2deg);
+            }
+            80% {
+                transform: scale(1.0) translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            /* Desaparecimento suave */
+            100% {
+                transform: scale(1.14) translateY(-40px) rotate(4deg);
+                opacity: 0;
+            }
+        }
+
+        /* WINK 2: I LOVE YOU (❤️) */
+        .wink-love-container {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%; pointer-events: none;
+        }
+        .wink-love-glow {
+            position: absolute;
+            width: clamp(340px, 92vw, 680px); height: clamp(340px, 92vw, 680px);
+            background: radial-gradient(circle, rgba(244, 63, 94, 0.6) 0%, rgba(225, 29, 72, 0.3) 40%, rgba(190, 18, 60, 0.1) 60%, transparent 75%);
+            border-radius: 50%; filter: blur(28px);
+            animation: loveGlowPulse 3.6s ease-out forwards;
+        }
+        @keyframes loveGlowPulse {
+            0% { transform: scale(0.2); opacity: 0; }
+            15% { transform: scale(1.2); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+            80% { transform: scale(1.15); opacity: 0.7; }
+            100% { transform: scale(1.35); opacity: 0; }
+        }
+        .wink-love-ribbon-wrap {
+            position: relative; z-index: 2;
+            animation: ribbonUnroll 3.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .wink-love-img {
+            width: clamp(320px, 94vw, 560px); height: auto; max-height: 82vh; object-fit: contain;
+            filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 35px rgba(244, 63, 94, 0.5)) brightness(1.05);
+        }
+        @keyframes ribbonUnroll {
+            0% {
+                clip-path: inset(0 50% 0 50%);
+                transform: scale(0.5) translateY(20px);
+                opacity: 0;
+            }
+            16% {
+                clip-path: inset(0 0% 0 0%);
+                transform: scale(1.08) translateY(0);
+                opacity: 1;
+            }
+            24% { transform: scale(0.97); }
+            36% { transform: scale(1.06); }
+            44% { transform: scale(0.98); }
+            56% { transform: scale(1.05); }
+            64% { transform: scale(1.0); }
+            82% { opacity: 1; transform: scale(1.0); }
+            100% {
+                transform: scale(1.12) translateY(-35px);
+                opacity: 0;
+            }
+        }
+        .wink-float-heart {
+            position: absolute; z-index: 3; font-size: clamp(24px, 5vw, 42px);
+            user-select: none; pointer-events: none;
+            animation: floatHeart 2.8s ease-out forwards;
+        }
+        .h1 { top: 25%; left: 15%; animation-delay: 0.2s; }
+        .h2 { top: 20%; right: 16%; animation-delay: 0.4s; }
+        .h3 { bottom: 24%; left: 20%; animation-delay: 0.3s; }
+        .h4 { bottom: 22%; right: 18%; animation-delay: 0.5s; }
+        .h5 { top: 16%; left: 48%; animation-delay: 0.35s; }
+        @keyframes floatHeart {
+            0% { transform: scale(0.2) translateY(30px) rotate(-15deg); opacity: 0; }
+            25% { transform: scale(1.2) translateY(0) rotate(10deg); opacity: 1; }
+            75% { transform: scale(1.0) translateY(-25px) rotate(-5deg); opacity: 0.9; }
+            100% { transform: scale(0.8) translateY(-60px) rotate(15deg); opacity: 0; }
+        }
+
+        /* WINK 3: TRISTEZA COM LÁGRIMAS (😢) */
+        .wink-sad-container {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%; pointer-events: none;
+        }
+        .wink-sad-glow {
+            position: absolute;
+            width: clamp(340px, 92vw, 680px); height: clamp(340px, 92vw, 680px);
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(30, 58, 138, 0.3) 40%, rgba(15, 23, 42, 0.1) 60%, transparent 75%);
+            border-radius: 50%; filter: blur(28px);
+            animation: sadGlowPulse 3.8s ease-out forwards;
+        }
+        @keyframes sadGlowPulse {
+            0% { transform: scale(0.3); opacity: 0; }
+            15% { transform: scale(1.2); opacity: 1; }
+            75% { transform: scale(1.05); opacity: 0.85; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        .wink-sad-img {
+            position: relative; z-index: 2;
+            width: clamp(310px, 92vw, 540px); height: auto; max-height: 80vh; object-fit: contain;
+            filter: drop-shadow(0 20px 45px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 35px rgba(59, 130, 246, 0.55)) brightness(1.05);
+            animation: sadEmojiAnim 3.8s ease-in-out forwards;
+        }
+        @keyframes sadEmojiAnim {
+            0% { transform: scale(0.3) translateY(-30px); opacity: 0; }
+            15% { transform: scale(1.06) translateY(0); opacity: 1; }
+            22% { transform: scale(0.98); }
+            35% { transform: scale(1.02) translateY(-4px); }
+            48% { transform: scale(0.99) translateY(4px); }
+            62% { transform: scale(1.02) translateY(-3px); }
+            75% { transform: scale(1.0) translateY(0); opacity: 1; }
+            100% { transform: scale(0.94) translateY(30px); opacity: 0; }
+        }
+        .rain-drop {
+            position: absolute; z-index: 3; font-size: clamp(22px, 4.5vw, 36px);
+            user-select: none; pointer-events: none;
+            animation: rainFall 2.4s ease-in infinite;
+        }
+        .rd1 { top: 12%; left: 16%; animation-delay: 0.1s; }
+        .rd2 { top: 15%; right: 18%; animation-delay: 0.35s; }
+        .rd3 { top: 8%; left: 32%; animation-delay: 0.2s; }
+        .rd4 { top: 14%; right: 34%; animation-delay: 0.45s; }
+        .rd5 { top: 22%; left: 12%; animation-delay: 0.15s; }
+        .rd6 { top: 20%; right: 14%; animation-delay: 0.3s; }
+        @keyframes rainFall {
+            0% { transform: translateY(-40px); opacity: 0; }
+            25% { opacity: 1; }
+            80% { opacity: 0.8; }
+            100% { transform: translateY(140px); opacity: 0; }
+        }
+
+        /* WINK 4: SAFADINHO (😏) */
+        .wink-cheeky-container {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%; pointer-events: none;
+        }
+        .wink-cheeky-glow {
+            position: absolute;
+            width: clamp(340px, 92vw, 680px); height: clamp(340px, 92vw, 680px);
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.6) 0%, rgba(168, 85, 247, 0.3) 40%, rgba(139, 92, 246, 0.1) 60%, transparent 75%);
+            border-radius: 50%; filter: blur(28px);
+            animation: cheekyGlow 3.6s ease-out forwards;
+        }
+        @keyframes cheekyGlow {
+            0% { transform: scale(0.3); opacity: 0; }
+            15% { transform: scale(1.2); opacity: 1; }
+            75% { transform: scale(1.05); opacity: 0.85; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        .wink-cheeky-img {
+            position: relative; z-index: 2;
+            width: clamp(310px, 92vw, 540px); height: auto; max-height: 80vh; object-fit: contain;
+            border-radius: 28px;
+            border: 2px solid rgba(244, 114, 182, 0.6);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(236, 72, 153, 0.5);
+            animation: cheekyAnim 3.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+        @keyframes cheekyAnim {
+            0% { transform: scale(0.2) translateY(50px) rotate(-8deg); opacity: 0; }
+            16% { transform: scale(1.06) translateY(0) rotate(2deg); opacity: 1; }
+            24% { transform: scale(0.97) rotate(-1deg); }
+            36% { transform: scale(1.03) rotate(1deg); }
+            48% { transform: scale(0.99) rotate(0deg); }
+            78% { opacity: 1; transform: scale(1.0) rotate(0deg); }
+            100% { transform: scale(1.1) translateY(-30px) rotate(3deg); opacity: 0; }
+        }
+        .kiss-mark {
+            position: absolute; z-index: 4; font-size: clamp(26px, 5.5vw, 45px);
+            user-select: none; pointer-events: none;
+            animation: kissPop 2.8s ease-out forwards;
+        }
+        .km1 { top: 18%; left: 14%; animation-delay: 0.25s; }
+        .km2 { bottom: 20%; right: 16%; animation-delay: 0.45s; }
+        .km3 { top: 22%; right: 15%; animation-delay: 0.35s; }
+        .km4 { bottom: 22%; left: 16%; animation-delay: 0.55s; }
+        @keyframes kissPop {
+            0% { transform: scale(0.1) rotate(-35deg); opacity: 0; }
+            25% { transform: scale(1.35) rotate(12deg); opacity: 1; }
+            75% { transform: scale(1.0) translateY(-15px) rotate(0deg); opacity: 0.9; }
+            100% { transform: scale(0.8) translateY(-40px) rotate(-10deg); opacity: 0; }
+        }
+
+        /* WINK 5: BALÃO DE ÁGUA (💦) */
+        .wink-water-container {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%; pointer-events: none;
+        }
+        .wink-water-img {
+            position: relative; z-index: 2;
+            width: clamp(310px, 92vw, 540px); height: auto; max-height: 80vh; object-fit: contain;
+            border-radius: 28px;
+            border: 2px solid rgba(56, 189, 248, 0.6);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(56, 189, 248, 0.5);
+            animation: waterCharAnim 3.8s ease-out forwards;
+        }
+        @keyframes waterCharAnim {
+            0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+            14% { transform: scale(1.08) rotate(3deg); opacity: 1; }
+            22% { transform: scale(0.98); }
+            75% { transform: scale(1.0); opacity: 1; }
+            100% { transform: scale(1.1) translateY(-25px); opacity: 0; }
+        }
+        .water-splash-overlay {
+            position: absolute; inset: 0; z-index: 5;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        .splash-wave {
+            position: absolute; width: clamp(260px, 75vw, 520px); height: clamp(260px, 75vw, 520px);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(186, 230, 253, 0.65) 0%, rgba(56, 189, 248, 0.4) 40%, rgba(14, 165, 233, 0.1) 65%, transparent 75%);
+            animation: waveExpand 2.8s ease-out 0.3s forwards;
+            opacity: 0; filter: blur(12px);
+        }
+        @keyframes waveExpand {
+            0% { transform: scale(0.1); opacity: 0; }
+            20% { transform: scale(1.4); opacity: 1; }
+            80% { transform: scale(1.6); opacity: 0.7; }
+            100% { transform: scale(1.9); opacity: 0; }
+        }
+        .splash-drop {
+            position: absolute; z-index: 6; font-size: clamp(28px, 6vw, 52px);
+            user-select: none; pointer-events: none;
+            animation: splashFly 2.6s ease-out forwards;
+        }
+        .sd1 { top: 22%; left: 16%; animation-delay: 0.35s; }
+        .sd2 { top: 18%; right: 18%; animation-delay: 0.4s; }
+        .sd3 { bottom: 24%; left: 22%; animation-delay: 0.38s; }
+        .sd4 { bottom: 20%; right: 20%; animation-delay: 0.45s; }
+        .sd5 { top: 40%; left: 10%; animation-delay: 0.3s; }
+        .sd6 { top: 38%; right: 12%; animation-delay: 0.42s; }
+        @keyframes splashFly {
+            0% { transform: scale(0.1) translate(0, 0); opacity: 0; }
+            20% { transform: scale(1.3) translate(0, 0); opacity: 1; }
+            60% { transform: scale(1.1) translate(0, 20px); opacity: 0.9; }
+            100% { transform: scale(0.8) translate(0, 70px); opacity: 0; }
         }
 
         @media (min-width: 1024px) {
@@ -617,9 +935,35 @@
 
                     <div id="emoji-picker" class="emoji-picker">
                         <div id="emoji-list" class="flex flex-wrap gap-2 justify-center max-h-[150px] overflow-y-auto w-full scrollbar-hide"></div>
-                        <div class="w-full mt-2 border-t border-gray-600 pt-3 flex justify-center gap-3">
-                            <button class="bg-pink-600 hover:bg-pink-500 px-3 py-1.5 rounded text-xs text-white uppercase font-bold transition flex flex-col items-center" onclick="sendWink('kiss')">💋<span class="text-[9px]">Beijo</span></button>
-                            <button class="bg-orange-600 hover:bg-orange-500 px-3 py-1.5 rounded text-xs text-white uppercase font-bold transition flex flex-col items-center" onclick="sendWink('butt')">🍑<span class="text-[9px]">Bunda</span></button>
+                        <div class="w-full mt-2 border-t border-white/10 pt-2.5 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                            <!-- 1. Beijo -->
+                            <button class="shrink-0 bg-pink-600 hover:bg-pink-500 px-2.5 py-1.5 rounded-xl text-xs text-white font-bold transition flex flex-col items-center shadow" onclick="sendWink('kiss')" title="Wink Beijo">
+                                <span class="text-base">💋</span><span class="text-[9px] mt-0.5 whitespace-nowrap">Beijo</span>
+                            </button>
+                            <!-- 2. Risada HAHAHA! -->
+                            <button class="shrink-0 bg-gradient-to-br from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 px-2.5 py-1.5 rounded-xl text-xs text-white font-bold transition flex flex-col items-center shadow-md shadow-amber-500/20" onclick="sendWink('laugh')" title="Wink Risada HAHAHA!">
+                                <span class="text-base">😂</span><span class="text-[9px] mt-0.5 whitespace-nowrap">Risada</span>
+                            </button>
+                            <!-- 3. I Love You -->
+                            <button class="shrink-0 bg-gradient-to-br from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 px-2.5 py-1.5 rounded-xl text-xs text-white font-bold transition flex flex-col items-center shadow-md shadow-rose-500/20" onclick="sendWink('love')" title="Wink I Love You">
+                                <span class="text-base">❤️</span><span class="text-[9px] mt-0.5 whitespace-nowrap">Love You</span>
+                            </button>
+                            <!-- 4. Tristeza -->
+                            <button class="shrink-0 bg-gradient-to-br from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 px-2.5 py-1.5 rounded-xl text-xs text-white font-bold transition flex flex-col items-center shadow-md shadow-blue-500/20" onclick="sendWink('sad')" title="Wink Tristeza 😢">
+                                <span class="text-base">😢</span><span class="text-[9px] mt-0.5 whitespace-nowrap">Tristeza</span>
+                            </button>
+                            <!-- 5. Safadinho -->
+                            <button class="shrink-0 bg-gradient-to-br from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 px-2.5 py-1.5 rounded-xl text-xs text-white font-bold transition flex flex-col items-center shadow-md shadow-fuchsia-500/20" onclick="sendWink('cheeky')" title="Wink Safadinho 😏">
+                                <span class="text-base">😏</span><span class="text-[9px] mt-0.5 whitespace-nowrap">Safadinho</span>
+                            </button>
+                            <!-- 6. Balão de Água -->
+                            <button class="shrink-0 bg-gradient-to-br from-sky-500 to-blue-500 hover:from-sky-400 hover:to-blue-400 px-2.5 py-1.5 rounded-xl text-xs text-white font-bold transition flex flex-col items-center shadow-md shadow-sky-500/20" onclick="sendWink('water')" title="Wink Balão de Água 💦">
+                                <span class="text-base">💦</span><span class="text-[9px] mt-0.5 whitespace-nowrap">Balão Água</span>
+                            </button>
+                            <!-- 7. Bunda -->
+                            <button class="shrink-0 bg-orange-600 hover:bg-orange-500 px-2.5 py-1.5 rounded-xl text-xs text-white font-bold transition flex flex-col items-center shadow" onclick="sendWink('butt')" title="Wink Bunda">
+                                <span class="text-base">🍑</span><span class="text-[9px] mt-0.5 whitespace-nowrap">Bunda</span>
+                            </button>
                         </div>
                     </div>
                     <button class="btn-icon-small" onclick="toggleEmojiPicker()"><ion-icon name="happy-outline"></ion-icon></button>
@@ -1045,25 +1389,286 @@
             e.target.value = ""; 
         }
 
+        const WINK_NAMES = {
+            kiss: '💋 Beijo',
+            laugh: '😂 Risada (HAHAHA!)',
+            love: '❤️ I LOVE YOU',
+            sad: '😢 Tristeza',
+            cheeky: '😏 Safadinho',
+            water: '💦 Balão de Água',
+            butt: '🍑 Bunda'
+        };
+
         function sendWink(type) {
             picker.classList.remove('show');
-            if(socket) socket.emit('chat-message', roomId, { isWink: true, winkType: type });
+            const label = WINK_NAMES[type] || type;
+            const data = { name: nickname, isWink: true, winkType: type, winkLabel: label };
+            if(socket) socket.emit('chat-message', roomId, data);
             playWink(type);
+            addMessage({ name: nickname, msg: `✨ Enviou um Wink: ${label}` }, true);
         }
 
+        let winkTimeout = null;
         function playWink(type) {
             const wOverlay = document.getElementById('wink-overlay');
+            if (!wOverlay) return;
+            if (winkTimeout) {
+                clearTimeout(winkTimeout);
+                winkTimeout = null;
+            }
             wOverlay.innerHTML = '';
             
-            const emoji = document.createElement('div');
-            emoji.className = 'wink-item';
-            
-            if(type === 'kiss') emoji.innerText = '💋';
-            if(type === 'butt') emoji.innerText = '🍑';
-            
-            wOverlay.appendChild(emoji);
-            wOverlay.style.display = 'flex';
-            setTimeout(() => { wOverlay.style.display = 'none'; }, 1500);
+            if (type === 'laugh') {
+                wOverlay.innerHTML = `
+                    <div class="wink-laugh-container">
+                        <div class="wink-burst-bg"></div>
+                        <picture>
+                            <source srcset="wink-laugh.webp" type="image/webp">
+                            <img src="wink-laugh.png" alt="Wink Risada HAHAHA!" class="wink-laugh-img" draggable="false">
+                        </picture>
+                    </div>
+                `;
+                wOverlay.style.display = 'flex';
+                playLaughAudio();
+                winkTimeout = setTimeout(() => {
+                    wOverlay.style.display = 'none';
+                    wOverlay.innerHTML = '';
+                }, 3500);
+            } else if (type === 'love') {
+                wOverlay.innerHTML = `
+                    <div class="wink-love-container">
+                        <div class="wink-love-glow"></div>
+                        <div class="wink-love-ribbon-wrap">
+                            <picture>
+                                <source srcset="wink-love.webp" type="image/webp">
+                                <img src="wink-love.png" alt="I LOVE YOU" class="wink-love-img" draggable="false">
+                            </picture>
+                        </div>
+                        <div class="wink-float-heart h1">💖</div>
+                        <div class="wink-float-heart h2">❤️</div>
+                        <div class="wink-float-heart h3">💕</div>
+                        <div class="wink-float-heart h4">✨</div>
+                        <div class="wink-float-heart h5">💘</div>
+                    </div>
+                `;
+                wOverlay.style.display = 'flex';
+                playLoveAudio();
+                winkTimeout = setTimeout(() => {
+                    wOverlay.style.display = 'none';
+                    wOverlay.innerHTML = '';
+                }, 3600);
+            } else if (type === 'sad') {
+                wOverlay.innerHTML = `
+                    <div class="wink-sad-container">
+                        <div class="wink-sad-glow"></div>
+                        <picture>
+                            <source srcset="wink-sad.webp" type="image/webp">
+                            <img src="wink-sad.png" alt="Tristeza 😢" class="wink-sad-img" draggable="false">
+                        </picture>
+                        <div class="rain-drop rd1">💧</div>
+                        <div class="rain-drop rd2">🌧️</div>
+                        <div class="rain-drop rd3">💧</div>
+                        <div class="rain-drop rd4">💔</div>
+                        <div class="rain-drop rd5">💧</div>
+                        <div class="rain-drop rd6">💔</div>
+                    </div>
+                `;
+                wOverlay.style.display = 'flex';
+                playSadAudio();
+                winkTimeout = setTimeout(() => {
+                    wOverlay.style.display = 'none';
+                    wOverlay.innerHTML = '';
+                }, 3800);
+            } else if (type === 'cheeky') {
+                wOverlay.innerHTML = `
+                    <div class="wink-cheeky-container">
+                        <div class="wink-cheeky-glow"></div>
+                        <picture>
+                            <source srcset="wink-cheeky.webp" type="image/webp">
+                            <img src="wink-cheeky.png" alt="Safadinho 😏" class="wink-cheeky-img" draggable="false">
+                        </picture>
+                        <div class="kiss-mark km1">💋</div>
+                        <div class="kiss-mark km2">💋</div>
+                        <div class="kiss-mark km3">🔥</div>
+                        <div class="kiss-mark km4">💋</div>
+                    </div>
+                `;
+                wOverlay.style.display = 'flex';
+                playCheekyAudio();
+                winkTimeout = setTimeout(() => {
+                    wOverlay.style.display = 'none';
+                    wOverlay.innerHTML = '';
+                }, 3600);
+            } else if (type === 'water') {
+                wOverlay.innerHTML = `
+                    <div class="wink-water-container">
+                        <picture>
+                            <source srcset="wink-water.webp" type="image/webp">
+                            <img src="wink-water.png" alt="Balão de Água 💦" class="wink-water-img" draggable="false">
+                        </picture>
+                        <div class="water-splash-overlay">
+                            <div class="splash-wave"></div>
+                            <div class="splash-drop sd1">💦</div>
+                            <div class="splash-drop sd2">💧</div>
+                            <div class="splash-drop sd3">🌊</div>
+                            <div class="splash-drop sd4">💦</div>
+                            <div class="splash-drop sd5">💧</div>
+                            <div class="splash-drop sd6">💦</div>
+                        </div>
+                    </div>
+                `;
+                wOverlay.style.display = 'flex';
+                playWaterAudio();
+                winkTimeout = setTimeout(() => {
+                    wOverlay.style.display = 'none';
+                    wOverlay.innerHTML = '';
+                }, 3800);
+            } else {
+                const emoji = document.createElement('div');
+                emoji.className = 'wink-item';
+                
+                if(type === 'kiss') emoji.innerText = '💋';
+                if(type === 'butt') emoji.innerText = '🍑';
+                
+                wOverlay.appendChild(emoji);
+                wOverlay.style.display = 'flex';
+                winkTimeout = setTimeout(() => {
+                    wOverlay.style.display = 'none';
+                    wOverlay.innerHTML = '';
+                }, 1500);
+            }
+        }
+
+        function playLaughAudio() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const notes = [440, 523.25, 493.88, 587.33, 659.25, 523.25];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.11);
+                    osc.frequency.exponentialRampToValueAtTime(freq * 0.68, ctx.currentTime + idx * 0.11 + 0.09);
+                    
+                    gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.11);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.11 + 0.09);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.start(ctx.currentTime + idx * 0.11);
+                    osc.stop(ctx.currentTime + idx * 0.11 + 0.10);
+                });
+            } catch (e) {}
+        }
+
+        function playLoveAudio() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const notes = [523.25, 659.25, 783.99, 987.77, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+                    gain.gain.setValueAtTime(0.16, ctx.currentTime + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.12 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + idx * 0.12);
+                    osc.stop(ctx.currentTime + idx * 0.12 + 0.38);
+                });
+            } catch (e) {}
+        }
+
+        function playSadAudio() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const notes = [440, 392, 349.23, 329.63];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.22);
+                    osc.frequency.exponentialRampToValueAtTime(freq * 0.94, ctx.currentTime + idx * 0.22 + 0.20);
+                    gain.gain.setValueAtTime(0.14, ctx.currentTime + idx * 0.22);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.22 + 0.22);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + idx * 0.22);
+                    osc.stop(ctx.currentTime + idx * 0.22 + 0.24);
+                });
+            } catch (e) {}
+        }
+
+        function playCheekyAudio() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(980, ctx.currentTime + 0.22);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.26);
+
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(800, ctx.currentTime + 0.28);
+                osc2.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.42);
+                gain2.gain.setValueAtTime(0.22, ctx.currentTime + 0.28);
+                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.42);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(ctx.currentTime + 0.28);
+                osc2.stop(ctx.currentTime + 0.44);
+            } catch (e) {}
+        }
+
+        function playWaterAudio() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const drops = [587, 880, 1174, 784, 1318];
+                drops.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq * 1.3, ctx.currentTime + idx * 0.08);
+                    osc.frequency.exponentialRampToValueAtTime(freq * 0.6, ctx.currentTime + idx * 0.08 + 0.12);
+                    gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.08 + 0.12);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + idx * 0.08);
+                    osc.stop(ctx.currentTime + idx * 0.08 + 0.13);
+                });
+            } catch (e) {}
         }
 
         async function send() {
@@ -1091,12 +1696,22 @@
 
         if(socket) {
             socket.on("chat-message", data => {
-                if(data.isWink) playWink(data.winkType);
-                else addMessage(data, false);
+                if(data.isWink) {
+                    playWink(data.winkType);
+                    const label = data.winkLabel || WINK_NAMES[data.winkType] || data.winkType;
+                    addMessage({ name: data.name || 'Amigo', msg: `✨ Enviou um Wink: ${label}` }, false);
+                } else {
+                    addMessage(data, false);
+                }
             });
             socket.on('chat-history', history => {
                 history.forEach(data => {
-                    if(!data.isWink) addMessage(data, false);
+                    if(data.isWink) {
+                        const label = data.winkLabel || WINK_NAMES[data.winkType] || data.winkType;
+                        addMessage({ name: data.name || 'Amigo', msg: `✨ Enviou um Wink: ${label}` }, false);
+                    } else {
+                        addMessage(data, false);
+                    }
                 });
             });
         }
