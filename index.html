@@ -884,7 +884,7 @@
             <div class="call-contact-info">
                 <img src="capa.png" class="contact-avatar" alt="Avatar">
                 <div class="flex flex-col">
-                    <span id="remote-nickname" class="contact-name">Jessica ❤️</span>
+                    <span id="remote-nickname" class="contact-name">Chamada Ativa</span>
                     <span id="call-timer" class="contact-timer">00:00:00</span>
                 </div>
             </div>
@@ -911,7 +911,7 @@
             <div id="remoteVideoBox" class="video-box remote-box">
                 <video id="remoteVideo" autoplay playsinline></video>
                 <div class="video-overlay"></div>
-                <div class="video-name-badge" id="remote-badge-label">Jessica</div>
+                <div class="video-name-badge" id="remote-badge-label">Remoto</div>
             </div>
             <div id="localVideoBox" class="video-box local-box">
                 <video id="localVideo" autoplay muted playsinline></video>
@@ -1091,7 +1091,7 @@
                 </div>
                 
                 <p class="text-[15px] text-gray-200 leading-snug mb-5">
-                    <strong id="watch-invite-sender" class="text-white font-bold">Aldieris</strong> está te convidando para assistir um vídeo junto com ele.<br><br>
+                    <strong id="watch-invite-sender" class="text-white font-bold">Seu par</strong> está te convidando para assistir um vídeo juntos.<br><br>
                     <span class="text-gray-300 text-sm">Deseja participar?</span>
                 </p>
 
@@ -1120,6 +1120,7 @@
         let peer;
         let roomId;
         let nickname = "";
+        let remoteNickname = "";
 
         const emojis = ["😀","😂","🤣","😊","😍","😘","🥰","😎","🤩","😏","🤔","😐","🙄","😴","😷","🤢","🥵","🥶","🤯","🥳","🥺","😢","😭","😡","🤬","😱","👽","👻","💩","👍","👎","👏","🙌","🫶","❤️","💔","🔥","✨","🌟","🎉"];
         const picker = document.getElementById('emoji-picker');
@@ -1249,7 +1250,7 @@
                     nickEl.innerText = "🔴 Conexão fraca! Atualize a página...";
                     nickEl.style.color = "#ff4444";
                 } else if (peer.iceConnectionState === "connected") {
-                    nickEl.innerText = "🟢 Vídeo Conectado!";
+                    nickEl.innerText = remoteNickname || "🟢 Vídeo Conectado!";
                     nickEl.style.color = "#44ff44";
                 }
             };
@@ -1259,7 +1260,19 @@
             if(!socket) return;
             
             socket.on("user-joined", async (senderId, remoteNick) => {
-                document.getElementById('remote-nickname').innerText = "Conectando vídeo...";
+                if (remoteNick) {
+                    remoteNickname = remoteNick;
+                    const nickEl = document.getElementById('remote-nickname');
+                    if (nickEl) nickEl.innerText = remoteNick;
+                    const badge = document.getElementById('remote-badge-label');
+                    if (badge) badge.innerText = remoteNick;
+                } else {
+                    document.getElementById('remote-nickname').innerText = "Conectando vídeo...";
+                }
+
+                if (nickname && socket) {
+                    socket.emit("sys-msg", roomId, nickname);
+                }
                 
                 // Força recriar a conexão limpa sempre que alguém entrar
                 initPeerConnection();
@@ -1270,7 +1283,7 @@
             });
 
             socket.on("offer", async (senderId, offer) => {
-                document.getElementById('remote-nickname').innerText = "Conectando vídeo...";
+                document.getElementById('remote-nickname').innerText = remoteNickname || "Conectando vídeo...";
                 
                 // Se o estado não for estável, a conexão está suja. Recriar.
                 if(peer.signalingState !== "stable") {
@@ -1310,7 +1323,13 @@
             });
             
             socket.on("sys-msg", (nick) => {
-                document.getElementById('remote-nickname').innerText = nick;
+                if (nick) {
+                    remoteNickname = nick;
+                    const nickEl = document.getElementById('remote-nickname');
+                    if (nickEl) nickEl.innerText = nick;
+                    const badge = document.getElementById('remote-badge-label');
+                    if (badge) badge.innerText = nick;
+                }
             });
 
             // ============================================
@@ -1729,15 +1748,17 @@
             const now = new Date();
             const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+            const senderName = data.name || remoteNickname;
+
             if(data.isImg) {
                 div.innerHTML = `
-                    ${!isMine ? `<div class="msg-sender">${data.name || 'Jessica'}</div>` : ''}
+                    ${!isMine && senderName ? `<div class="msg-sender">${senderName}</div>` : ''}
                     <img src="${data.imgData}" class="w-full rounded mt-1 shadow" style="max-height:100px; object-fit:cover;">
                     <div class="text-right mt-1"><span class="msg-time">${timeStr}</span></div>
                 `;
             } else {
                 div.innerHTML = `
-                    ${!isMine ? `<div class="msg-sender">${data.name || 'Jessica'}</div>` : ''}
+                    ${!isMine && senderName ? `<div class="msg-sender">${senderName}</div>` : ''}
                     <div class="flex items-baseline justify-between gap-3">
                         <span class="msg-original">${data.msg}</span>
                         <span class="msg-time">${timeStr}</span>
@@ -2317,9 +2338,13 @@
         function addSystemNotice(text) {
             const nickEl = document.getElementById('remote-nickname');
             if (nickEl) {
-                const prev = nickEl.innerText;
+                const currentName = remoteNickname || (hasJoined ? "🟢 Vídeo Conectado" : "Chamada Ativa");
                 nickEl.innerText = text;
-                setTimeout(() => { if (nickEl.innerText === text) nickEl.innerText = prev; }, 4000);
+                setTimeout(() => { 
+                    if (nickEl.innerText === text) {
+                        nickEl.innerText = remoteNickname || currentName;
+                    }
+                }, 4000);
             }
         }
 
@@ -2346,6 +2371,11 @@
             document.getElementById('screen-call').classList.remove('active');
             document.getElementById('screen-initial').classList.add('active');
             hasJoined = false;
+            remoteNickname = "";
+            const nickEl = document.getElementById('remote-nickname');
+            if (nickEl) nickEl.innerText = "Chamada Ativa";
+            const badgeEl = document.getElementById('remote-badge-label');
+            if (badgeEl) badgeEl.innerText = "Remoto";
         }
     </script>
 </body>
